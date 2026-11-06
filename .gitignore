@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+bun.lock
+
+# Build outputs
+build/
+dist/
+coverage/
+
+# Environment & local secrets
+.env
+.env.*
+!.env.example
+
+# Editor & OS files
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.aistudio/
+.antigravity/
+
+# External reference archives (not part of the clean production repo)
+project-nomad-main/
+survival-llm-main/
+Sentinel_Pack_Survie/
+GITHUB_LE_QG_DU_SENTINEL/

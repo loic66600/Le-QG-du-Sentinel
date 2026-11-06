@@ -1,0 +1,26 @@
+{
+  "name": "LE QG DU SENTINEL — Le Quartier Général",
+  "short_name": "QG Sentinel",
+  "description": "Le Quartier Général autonome hors-ligne : Eau potable & Hôpitaux de France, Documentation d'Urgence, Stocks de Survie, Blackout & IA locale.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#000000",
+  "theme_color": "#f59e0b",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "/assets/aistudio/noir_233aab2b.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/aistudio/noir_233aab2b.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

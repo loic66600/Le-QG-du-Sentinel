@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="QG Sentinel" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="/assets/aistudio/noir_233aab2b.png" />
+    <link rel="apple-touch-icon" href="/assets/aistudio/noir_233aab2b.png" />
+    <title>LE QG DU SENTINEL — Le Quartier Général Autonome Hors-Ligne</title>
+    <meta name="description" content="LE QG DU SENTINEL — Le Quartier Général autonome hors-ligne de survie et résilience à 100% sans internet." />
+    <meta property="og:title" content="LE QG DU SENTINEL — Le Quartier Général" />
+    <meta property="og:description" content="Le Quartier Général autonome hors-ligne de survie et résilience à 100% sans internet." />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <script>
+      if ('serviceWorker' in navigator && (location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.port === '3000' || location.port === '3001')) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          for (var i = 0; i < regs.length; i++) { regs[i].unregister(); }
+        });
+        if (window.caches) {
+          caches.keys().then(function(keys) {
+            for (var j = 0; j < keys.length; j++) { caches.delete(keys[j]); }
+          });
+        }
+      }
+    </script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
