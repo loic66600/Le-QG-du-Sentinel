@@ -67,15 +67,15 @@ export const SurvivalLLM: React.FC<SurvivalLLMProps> = ({ language }) => {
     role: 'assistant',
     timestamp: '00:00:01',
     content: isFr
-      ? `**SENTINEL SURVIVAL AI CORE** opérationnel en mode local-first. 
-Je suis conçu pour vous guider en situation d'urgence vitale, d'isolement ou de coupure réseau prolongée. 
+      ? `**Assistant de Survie du QG Sentinel** (Fonctionne à 100 % sans Internet).
+Je suis là pour vous aider simplement et étape par étape en cas de coupure d'électricité, de blessure ou de manque d'eau.
 
-Posez votre question ou cliquez sur une action de triage prioritaire ci-dessous. Toutes les réponses s'appuient sur les protocoles **TCCC**, **WikiMed**, **CDC** et **FM 21-76**.`
-      : `**SENTINEL SURVIVAL AI CORE** operational in local-first mode. 
-I am calibrated to guide you through life-threatening emergencies, grid collapses, or prolonged off-grid scenarios.
+Écrivez votre problème avec vos propres mots (ex : *« Mon enfant a une forte fièvre »*, *« Comment boire l'eau d'un lac sans tomber malade ? »*, *« Quelqu'un saigne beaucoup »*) ou cliquez sur l'un des boutons rapides ci-dessous :`
+      : `**Sentinel HQ Survival Assistant** (Works 100% offline without Internet).
+I am here to guide you step by step in plain language during power outages, medical emergencies, or water shortages.
 
-Ask a question or select an emergency triage action below. All recommendations are derived from **TCCC**, **WikiMed**, **CDC**, and **FM 21-76** military field manuals.`,
-    citations: ['TCCC 2024 Guidelines', 'WikiMed Emergency Index', 'US Army FM 21-76']
+Type your question in plain words or tap one of the quick buttons below:`,
+    citations: ['Secours Civils & Urgences', 'Guide Eau Potable', 'Autonomie Familiale']
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([initialGreeting]);

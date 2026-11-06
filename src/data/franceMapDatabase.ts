@@ -1,4 +1,5 @@
 import { Waypoint } from '../components/TacticalMap';
+import { FRANCE_COMPLETE_SURVIVAL_POIS } from './franceCompleteSurvivalPois';
 
 /**
  * Base Nationale intégrée hors-ligne :
@@ -1915,5 +1916,6 @@ export const FRANCE_EXTENDED_POIS: Waypoint[] = [
     lat: 42.2419,
     lon: 9.0486,
     notes: 'EAU NON POTABLE : Eau cristalline de torrent alpin mais présence de troupeaux en altitude. Toujours filtrer/traiter (Micropur ou ébullition).'
-  }
+  },
+  ...FRANCE_COMPLETE_SURVIVAL_POIS
 ];

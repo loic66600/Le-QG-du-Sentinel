@@ -126,6 +126,87 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         </div>
       </div>
 
+      {/* 1B. BEGINNER EMERGENCY GUIDE ("POUR UTILISATEUR NOVICE — QUE FAIRE IMMÉDIATEMENT ?") */}
+      <div className="border border-amber-500/50 rounded-xl bg-black p-4 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-amber-500 text-black font-mono text-[10px] font-black uppercase">
+              {isFr ? 'GUIDE SIMPLE DÉBUTANT' : 'SIMPLE BEGINNER GUIDE'}
+            </span>
+            <h2 className="text-xs sm:text-sm font-extrabold text-white uppercase">
+              {isFr
+                ? 'Que cherchez-vous en urgence maintenant ? (Cliquez sur votre situation)'
+                : 'What do you need right now? (Tap your situation)'}
+            </h2>
+          </div>
+          <span className="text-[11px] font-mono text-emerald-400">
+            ✓ {isFr ? 'Tout est déjà enregistré hors-ligne sur cet appareil' : 'Everything is already saved offline'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          <button
+            onClick={() => onNavigate('emergency-docs')}
+            className="p-3 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 border border-rose-700/70 text-left flex items-center gap-3 cursor-pointer"
+          >
+            <span className="text-2xl shrink-0">🫀</span>
+            <div className="min-w-0">
+              <div className="text-xs font-extrabold text-rose-200">
+                {isFr ? '1. Blessure ou Malaise' : '1. Injury or Medical Issue'}
+              </div>
+              <div className="text-[11px] text-stone-300 truncate">
+                {isFr ? 'Voir les gestes de secours + Médicaments' : 'First aid steps + Medications'}
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => onNavigate('tactical-map')}
+            className="p-3 rounded-lg bg-sky-950/40 hover:bg-sky-900/60 border border-sky-700/70 text-left flex items-center gap-3 cursor-pointer"
+          >
+            <span className="text-2xl shrink-0">💧</span>
+            <div className="min-w-0">
+              <div className="text-xs font-extrabold text-sky-200">
+                {isFr ? '2. Eau, Lacs, Hôpitaux & Forêts' : '2. Water, Lakes, Hospitals'}
+              </div>
+              <div className="text-[11px] text-stone-300 truncate">
+                {isFr ? 'Carte complète (Eau, Cliniques, TDF, Forêts)' : 'Complete offline map'}
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => onNavigate('blackout')}
+            className="p-3 rounded-lg bg-amber-950/40 hover:bg-amber-900/60 border border-amber-700/70 text-left flex items-center gap-3 cursor-pointer"
+          >
+            <span className="text-2xl shrink-0">⚡</span>
+            <div className="min-w-0">
+              <div className="text-xs font-extrabold text-amber-200">
+                {isFr ? '3. Plus d’Électricité (Blackout)' : '3. Power Outage (Blackout)'}
+              </div>
+              <div className="text-[11px] text-stone-300 truncate">
+                {isFr ? 'Que faire dans les 15 premières minutes' : 'What to do in the first 15 min'}
+              </div>
+            </div>
+          </button>
+
+          <button
+            onClick={() => onNavigate('survival-llm')}
+            className="p-3 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-700/70 text-left flex items-center gap-3 cursor-pointer"
+          >
+            <span className="text-2xl shrink-0">💬</span>
+            <div className="min-w-0">
+              <div className="text-xs font-extrabold text-emerald-200">
+                {isFr ? '4. Poser une Question Simple' : '4. Ask a Simple Question'}
+              </div>
+              <div className="text-[11px] text-stone-300 truncate">
+                {isFr ? 'L’assistant vous répond sans Internet' : 'Offline assistant answers you'}
+              </div>
+            </div>
+          </button>
+        </div>
+      </div>
+
       {/* 2. MAIN MODULES GRID (6 Spacious Cards with Short Descriptions) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {/* Module 1: Carte Tactique, Eau Potable & Hôpitaux/Cliniques */}
@@ -143,17 +224,17 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                 <MapPin className="w-5 h-5" />
               </div>
               <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-black border border-neutral-800 text-sky-300 font-bold">
-                💧 EAU POTABLE & 🏥 HÔPITAUX
+                💧 EAU · 🌊 LACS · 🏥 HÔPITAUX · 🌲 FORÊTS · 📡 TDF
               </span>
             </div>
             <div>
               <h3 className="text-base font-bold text-white group-hover:text-amber-400">
-                {isFr ? 'Carte de France (Eau & Hôpitaux)' : 'France Map (Water & Hospitals)'}
+                {isFr ? 'Carte de France Complète (Eau, Lacs, Hôpitaux, Forêts, TDF)' : 'Complete France Map (Water, Lakes, Hospitals, Forests, TDF)'}
               </h3>
               <p className="text-xs text-stone-400 mt-1 leading-relaxed">
                 {isFr
-                  ? 'Points d’eau potable existants, hôpitaux normaux et cliniques de France avec regroupement automatique au zoom.'
-                  : 'Drinking water points, general hospitals, and clinics across France with dynamic zoom clustering.'}
+                  ? 'Points d’eau potable, plans d’eau & lacs, hôpitaux & cliniques (dont couverture complète du 66), grandes forêts et émetteurs radio TDF pré-enregistrés hors-ligne.'
+                  : 'Drinking water, lakes, hospitals & clinics (including full Dept 66 coverage), major forests, and TDF transmitters pre-saved offline.'}
               </p>
             </div>
           </div>

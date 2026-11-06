@@ -154,7 +154,7 @@ pause
 
     const firstAidJson = JSON.stringify(FIRST_AID_URGENCIES);
     const drugsJson = JSON.stringify(EMERGENCY_DRUGS);
-    const poisJson = JSON.stringify(FRANCE_EXTENDED_POIS.slice(0, 300));
+    const poisJson = JSON.stringify(FRANCE_EXTENDED_POIS);
     const familyJson = JSON.stringify(
       familyData || {
         householdMembers: '2 adultes, 1 enfant',
@@ -415,26 +415,33 @@ pause
 
     function renderEau(q) {
       const el = document.getElementById('app-content');
+      const isLake = p => p.type === 'water-raw' && (p.id.includes('lake') || /lac |plan d’eau|plans d’eau|barrage/i.test(p.name));
       const filtered = POIS.filter(p => {
-        const matchType = waterFilter === 'all' || p.type === waterFilter;
-        const matchQ = !q || p.name.toLowerCase().includes(q.toLowerCase()) || p.regionId.toLowerCase().includes(q.toLowerCase());
+        const matchType =
+          waterFilter === 'all' ||
+          (waterFilter === 'lakes' && isLake(p)) ||
+          p.type === waterFilter;
+        const matchQ = !q || p.name.toLowerCase().includes(q.toLowerCase()) || p.regionId.toLowerCase().includes(q.toLowerCase()) || (p.notes && p.notes.toLowerCase().includes(q.toLowerCase()));
         return matchType && matchQ;
       });
       el.innerHTML = \`
         <div class="hero-box">
-          <div style="font-size:11px;color:#38bdf8;font-weight:800;">CARTOGRAPHIE & POINTS D'EAU FRANCE</div>
-          <div style="font-size:16px;font-weight:900;color:#fff;margin-top:2px;">Eau Potable, Sources & Hôpitaux (\${filtered.length})</div>
+          <div style="font-size:11px;color:#38bdf8;font-weight:800;">CARTE & REPÈRES DE FRANCE HORS-LIGNE</div>
+          <div style="font-size:16px;font-weight:900;color:#fff;margin-top:2px;">Eau, Lacs, Hôpitaux, Forêts & TDF (\${filtered.length})</div>
         </div>
         <div class="chips">
           <button class="chip \${waterFilter === 'all' ? 'active' : ''}" onclick="setWaterFilter('all')">Tous (\${POIS.length})</button>
           <button class="chip \${waterFilter === 'water' ? 'active' : ''}" onclick="setWaterFilter('water')">💧 Eau Potable</button>
-          <button class="chip \${waterFilter === 'water-raw' ? 'active' : ''}" onclick="setWaterFilter('water-raw')">🚰 Eau à filtrer</button>
-          <button class="chip \${waterFilter === 'medical' ? 'active' : ''}" onclick="setWaterFilter('medical')">🏥 Hôpitaux</button>
+          <button class="chip \${waterFilter === 'lakes' ? 'active' : ''}" onclick="setWaterFilter('lakes')">🌊 Lacs & Plans d'Eau</button>
+          <button class="chip \${waterFilter === 'water-raw' ? 'active' : ''}" onclick="setWaterFilter('water-raw')">🚰 Sources / Eau Brute</button>
+          <button class="chip \${waterFilter === 'medical' ? 'active' : ''}" onclick="setWaterFilter('medical')">🏥 Hôpitaux & Cliniques</button>
+          <button class="chip \${waterFilter === 'camp' ? 'active' : ''}" onclick="setWaterFilter('camp')">🌲 Grandes Forêts</button>
+          <button class="chip \${waterFilter === 'radio' ? 'active' : ''}" onclick="setWaterFilter('radio')">📡 Émetteurs TDF</button>
         </div>
-        <input id="eau-search" type="text" placeholder="Rechercher ville, village, source, CHU..." value="\${q}" oninput="renderEau(this.value)" />
-      \` + filtered.slice(0, 100).map(p => \`
+        <input id="eau-search" type="text" placeholder="Chercher dépt (ex: 66), ville, lac, clinique, forêt..." value="\${q}" oninput="renderEau(this.value)" />
+      \` + filtered.slice(0, 120).map(p => \`
         <div class="card">
-          <span class="tag">\${p.type === 'water' ? '💧 EAU POTABLE' : p.type === 'water-raw' ? '🚰 EAU NON POTABLE (À TRAITER)' : '🏥 HÔPITAL / CLINIQUE'} · \${p.regionId.toUpperCase()}</span>
+          <span class="tag">\${p.type === 'water' ? '💧 EAU POTABLE' : isLake(p) ? '🌊 PLAN D’EAU / LAC' : p.type === 'water-raw' ? '🚰 SOURCE / EAU BRUTE' : p.type === 'medical' ? '🏥 HÔPITAL / CLINIQUE' : p.type === 'camp' ? '🌲 GRANDE FORÊT' : p.type === 'radio' ? '📡 ÉMETTEUR TDF' : '🏕️ REFUGE'} · \${p.regionId.toUpperCase()}</span>
           <div class="card-title">\${p.name}</div>
           <p style="font-size:12px;color:#38bdf8;font-weight:bold;margin-bottom:4px;">GPS WGS84 : \${p.lat.toFixed(4)}°N, \${p.lon.toFixed(4)}°E</p>
           <p style="font-size:12px;color:#d6d3d1;">\${p.notes || ''}</p>

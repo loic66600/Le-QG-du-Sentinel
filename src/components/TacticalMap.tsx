@@ -46,9 +46,11 @@ export interface Waypoint {
   isUserAdded?: boolean;
 }
 
-// 13 Official Metropolitan Regions of France + Whole France View
+// 13 Official Metropolitan Regions of France + Whole France View + Focus Dépt 66
 export const FRENCH_REGIONS: FrenchRegion[] = [
   { id: 'france', nameFr: '🇫🇷 France entière (Vue globale)', nameEn: '🇫🇷 All France (Global View)', lat: 46.6033, lon: 2.2000, zoom: 6 },
+  { id: 'dept-66', nameFr: '📍 Dépt 66 — Pyrénées-Orientales (Perpignan / Canigou / Cerdagne)', nameEn: '📍 Dept 66 — Pyrénées-Orientales (Perpignan)', lat: 42.6300, lon: 2.6800, zoom: 10 },
+  { id: 'occitanie', nameFr: 'Occitanie (Toulouse / Montpellier / Perpignan)', nameEn: 'Occitanie', lat: 43.5500, lon: 1.9500, zoom: 8 },
   { id: 'auvergne-rhone-alpes', nameFr: 'Auvergne-Rhône-Alpes', nameEn: 'Auvergne-Rhône-Alpes', lat: 45.5500, lon: 5.2000, zoom: 8 },
   { id: 'bourgogne-franche-comte', nameFr: 'Bourgogne-Franche-Comté', nameEn: 'Bourgogne-Franche-Comté', lat: 47.1500, lon: 5.2000, zoom: 8 },
   { id: 'bretagne', nameFr: 'Bretagne', nameEn: 'Brittany (Bretagne)', lat: 48.2000, lon: -2.9000, zoom: 8 },
@@ -59,7 +61,6 @@ export const FRENCH_REGIONS: FrenchRegion[] = [
   { id: 'ile-de-france', nameFr: 'Île-de-France', nameEn: 'Île-de-France (Paris)', lat: 48.7500, lon: 2.3500, zoom: 9 },
   { id: 'normandie', nameFr: 'Normandie', nameEn: 'Normandy (Normandie)', lat: 49.1200, lon: 0.1500, zoom: 8 },
   { id: 'nouvelle-aquitaine', nameFr: 'Nouvelle-Aquitaine', nameEn: 'Nouvelle-Aquitaine', lat: 44.7500, lon: 0.1500, zoom: 7 },
-  { id: 'occitanie', nameFr: 'Occitanie', nameEn: 'Occitanie', lat: 43.5500, lon: 1.9500, zoom: 8 },
   { id: 'pays-de-la-loire', nameFr: 'Pays de la Loire', nameEn: 'Pays de la Loire', lat: 47.4700, lon: -0.8500, zoom: 8 },
   { id: 'paca', nameFr: 'Provence-Alpes-Côte d’Azur (PACA)', nameEn: 'Provence-Alpes-Côte d’Azur', lat: 43.9500, lon: 6.0500, zoom: 8 }
 ];
@@ -598,13 +599,26 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
     ...(showRealLandmarks ? [...REAL_FRENCH_LANDMARKS, ...FRANCE_EXTENDED_POIS] : [])
   ];
 
+  const isLakeOrWaterbody = (wp: Waypoint) =>
+    wp.type === 'water-raw' &&
+    (wp.id.includes('lake') ||
+      wp.id.includes('lac') ||
+      /lac |plan d’eau|plans d’eau|barrage|étang|retenue/i.test(wp.name));
+
   // Filtered by selected region & category & search
   const visibleWaypoints = allWaypoints.filter(wp => {
     const matchesRegion =
-      selectedRegionId === 'france' || wp.isUserAdded || wp.regionId === 'osm' || wp.regionId === selectedRegionId;
+      selectedRegionId === 'france' ||
+      wp.isUserAdded ||
+      wp.regionId === 'osm' ||
+      (selectedRegionId === 'dept-66'
+        ? wp.id.startsWith('po66-') ||
+          (wp.lat >= 42.3 && wp.lat <= 42.92 && wp.lon >= 1.72 && wp.lon <= 3.2)
+        : wp.regionId === selectedRegionId);
     const matchesCat =
       activeFilter === 'all' ||
       (activeFilter === 'all-water' && (wp.type === 'water' || wp.type === 'water-raw')) ||
+      (activeFilter === 'lakes' && isLakeOrWaterbody(wp)) ||
       wp.type === activeFilter;
     const matchesSearch =
       !searchQuery.trim() ||
@@ -925,10 +939,12 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
 
     markersLayer.clearLayers();
 
-    const createCustomIcon = (type: Waypoint['type'], isSelected: boolean) => {
+    const createCustomIcon = (wp: Waypoint, isSelected: boolean) => {
+      const type = wp.type;
+      const isLake = isLakeOrWaterbody(wp);
       const bgColors = {
         water: '#0284c7',
-        'water-raw': '#0d9488',
+        'water-raw': isLake ? '#0369a1' : '#0d9488',
         shelter: '#d97706',
         medical: '#e11d48',
         radio: '#4f46e5',
@@ -941,11 +957,28 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
         ? 'border: 3px solid #ffffff; box-shadow: 0 0 10px #f59e0b;'
         : 'border: 2px solid #ffffff;';
 
+      const emoji =
+        type === 'water'
+          ? '💧'
+          : isLake
+          ? '🌊'
+          : type === 'water-raw'
+          ? '🚰'
+          : type === 'shelter'
+          ? '🏕️'
+          : type === 'medical'
+          ? '🏥'
+          : type === 'radio'
+          ? '📡'
+          : type === 'danger'
+          ? '⚠️'
+          : '🌲';
+
       return L.divIcon({
         className: 'sentinel-map-marker',
         html: `
           <div style="background-color: ${color}; ${border} width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 12px; font-weight: bold; cursor: pointer;">
-            ${type === 'water' ? '💧' : type === 'water-raw' ? '🚰' : type === 'shelter' ? '🏕️' : type === 'medical' ? '🏥' : type === 'radio' ? '📡' : type === 'danger' ? '⚠️' : '🌲'}
+            ${emoji}
           </div>
         `,
         iconSize: [26, 26],
@@ -956,7 +989,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
     const renderSingleWaypoint = (wp: Waypoint) => {
       const isSelected = selectedWaypoint?.id === wp.id;
       const marker = L.marker([wp.lat, wp.lon], {
-        icon: createCustomIcon(wp.type, isSelected)
+        icon: createCustomIcon(wp, isSelected)
       });
 
       marker.on('click', () => {
@@ -973,10 +1006,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
       markersLayer.addLayer(marker);
     };
 
-    // DYNAMIC SPATIAL CLUSTERING BY ZOOM LEVEL (Regroupement progressif au fur et à mesure du zoom : Eau Potable 💧 + Eau Non Potable 🚰 + Hôpitaux 🏥)
-    if (clusteringEnabled && currentZoom < 12) {
+    // DYNAMIC SPATIAL CLUSTERING BY ZOOM LEVEL (Dégroupe automatiquement dès le zoom départemental >= 9 pour voir chaque clinique, lac, forêt et émetteur)
+    if (clusteringEnabled && currentZoom < 9) {
       // Cell size in degrees shrinks by half on every zoom step
-      const cellSizeDeg = 44 / Math.pow(2, currentZoom);
+      const cellSizeDeg = 28 / Math.pow(2, currentZoom);
       const gridClusters = new Map<string, Waypoint[]>();
 
       visibleWaypoints.forEach(wp => {
@@ -1673,22 +1706,22 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
               {[
                 { id: 'all', label: isFr ? `Tous (${allWaypoints.length})` : `All (${allWaypoints.length})` },
                 {
-                  id: 'all-water',
-                  label: isFr
-                    ? `💧+🚰 Toute l’Eau (${allWaypoints.filter(w => w.type === 'water' || w.type === 'water-raw').length})`
-                    : `💧+🚰 All Water (${allWaypoints.filter(w => w.type === 'water' || w.type === 'water-raw').length})`
-                },
-                {
                   id: 'water',
                   label: isFr
                     ? `💧 Eau Potable (${allWaypoints.filter(w => w.type === 'water').length})`
                     : `💧 Potable Water (${allWaypoints.filter(w => w.type === 'water').length})`
                 },
                 {
+                  id: 'lakes',
+                  label: isFr
+                    ? `🌊 Plans d’Eau & Lacs (${allWaypoints.filter(w => isLakeOrWaterbody(w)).length})`
+                    : `🌊 Lakes & Reservoirs (${allWaypoints.filter(w => isLakeOrWaterbody(w)).length})`
+                },
+                {
                   id: 'water-raw',
                   label: isFr
-                    ? `🚰 Eau Non Potable (${allWaypoints.filter(w => w.type === 'water-raw').length})`
-                    : `🚰 Non-Potable (${allWaypoints.filter(w => w.type === 'water-raw').length})`
+                    ? `🚰 Sources, Puits & Eau Brute (${allWaypoints.filter(w => w.type === 'water-raw').length})`
+                    : `🚰 Springs & Raw Water (${allWaypoints.filter(w => w.type === 'water-raw').length})`
                 },
                 {
                   id: 'medical',
@@ -1696,9 +1729,24 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                     ? `🏥 Hôpitaux & Cliniques (${allWaypoints.filter(w => w.type === 'medical').length})`
                     : `🏥 Hospitals & Clinics (${allWaypoints.filter(w => w.type === 'medical').length})`
                 },
-                { id: 'shelter', label: isFr ? '🏕️ Refuges' : '🏕️ Refuges' },
-                { id: 'radio', label: isFr ? '📡 Émetteurs TDF' : '📡 Relays' },
-                { id: 'camp', label: isFr ? '🌲 Forêts' : '🌲 Forests' }
+                {
+                  id: 'camp',
+                  label: isFr
+                    ? `🌲 Grandes Forêts (${allWaypoints.filter(w => w.type === 'camp').length})`
+                    : `🌲 Major Forests (${allWaypoints.filter(w => w.type === 'camp').length})`
+                },
+                {
+                  id: 'radio',
+                  label: isFr
+                    ? `📡 Émetteurs TDF (${allWaypoints.filter(w => w.type === 'radio').length})`
+                    : `📡 TDF Transmitters (${allWaypoints.filter(w => w.type === 'radio').length})`
+                },
+                {
+                  id: 'shelter',
+                  label: isFr
+                    ? `🏕️ Refuges & Abris (${allWaypoints.filter(w => w.type === 'shelter').length})`
+                    : `🏕️ Refuges (${allWaypoints.filter(w => w.type === 'shelter').length})`
+                }
               ].map(tab => (
                 <button
                   key={tab.id}
@@ -1706,7 +1754,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                   className={`px-2 py-1 rounded-sm cursor-pointer ${
                     activeFilter === tab.id
                       ? 'bg-amber-500 text-black font-bold'
-                      : 'text-stone-400 hover:text-stone-200 bg-black'
+                      : 'text-stone-300 hover:text-white bg-black border border-neutral-800/80'
                   }`}
                 >
                   {tab.label}
@@ -1721,19 +1769,19 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                 className="px-2.5 py-1 rounded-sm bg-sky-950/90 hover:bg-sky-900 border border-sky-600 text-sky-200 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
                 title={
                   isFr
-                    ? 'Scanner et sauvegarder tous les points d’eau potable (💧), points d’eau non potable de villages/lavoirs/puits (🚰) et hôpitaux/cliniques (🏥) de la zone affichée'
-                    : 'Scan and cache all potable water, village raw water points & hospitals/clinics in view'
+                    ? 'Enregistrer dans la mémoire hors-ligne tous les points supplémentaires de la zone affichée avant une coupure Internet'
+                    : 'Save all extra points in current view before an outage'
                 }
               >
                 <RotateCcw className={`w-3 h-3 ${isScanningOsm ? 'animate-spin' : ''}`} />
                 <span>
                   {isScanningOsm
                     ? isFr
-                      ? 'Scan Villages & Villes...'
-                      : 'Scanning...'
+                      ? 'Enregistrement de la zone...'
+                      : 'Saving area...'
                     : isFr
-                    ? '💧🚰🏥 Recenser Villages & Zone (OSM)'
-                    : '💧🚰🏥 Scan Villages & Area (OSM)'}
+                    ? '📥 Enregistrer cette zone avant coupure'
+                    : '📥 Save Area Before Outage'}
                 </span>
               </button>
 
@@ -1746,38 +1794,43 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                 }`}
                 title={
                   isFr
-                    ? 'Regroupement automatique des points au fur et à mesure du zoom'
-                    : 'Automatic zoom-based marker clustering'
+                    ? 'Regrouper ou afficher tous les points séparément sur la carte'
+                    : 'Group or show all points individually'
                 }
               >
                 <Layers className="w-3 h-3" />
                 <span>
                   {isFr
-                    ? `Clusters Zoom : ${clusteringEnabled ? 'ON' : 'OFF'}`
-                    : `Clusters: ${clusteringEnabled ? 'ON' : 'OFF'}`}
+                    ? `Regrouper de loin : ${clusteringEnabled ? 'OUI' : 'NON'}`
+                    : `Group when zoomed out: ${clusteringEnabled ? 'YES' : 'NO'}`}
                 </span>
               </button>
 
               <button
-                onClick={() => setShowRealLandmarks(!showRealLandmarks)}
-                className={`px-2 py-1 rounded-sm border text-[11px] flex items-center gap-1 cursor-pointer ${
-                  showRealLandmarks
-                    ? 'bg-emerald-950/70 border-emerald-700 text-emerald-300'
-                    : 'bg-neutral-900 border-neutral-700 text-stone-400'
-                }`}
-                title={isFr ? 'Afficher/Masquer les vrais points de repère français' : 'Toggle real French landmarks'}
-              >
-                {showRealLandmarks ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-                <span>{isFr ? 'Base Nationale' : 'National DB'}</span>
-              </button>
-
-              <button
                 onClick={() => setMapTheme(mapTheme === 'tactical-oled' ? 'organic' : mapTheme === 'organic' ? 'red-night' : 'tactical-oled')}
-                className="px-2 py-1 rounded-sm bg-black border border-neutral-800 text-amber-400 text-[11px] cursor-pointer"
+                className="px-2 py-1 rounded-sm bg-black border border-neutral-800 text-amber-400 text-[11px] font-bold cursor-pointer"
               >
-                {mapTheme === 'tactical-oled' ? 'OLED' : mapTheme === 'organic' ? 'TOPO' : 'NUIT'}
+                {mapTheme === 'tactical-oled' ? '🎨 Mode Clair (Couleur)' : mapTheme === 'organic' ? '🌙 Mode Nuit Rouge' : '⚡ Mode Éco Noir'}
               </button>
             </div>
+          </div>
+
+          {/* Beginner-friendly Plain-Language Legend Bar */}
+          <div className="bg-black border border-neutral-800 rounded-md px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-300">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span><b className="text-sky-400">💧 Eau Potable :</b> Boire directement</span>
+              <span><b className="text-cyan-400">🌊 Lac / Plan d’eau :</b> Filtrer + bouillir 1 min</span>
+              <span><b className="text-teal-400">🚰 Source / Puits :</b> Faire bouillir</span>
+              <span><b className="text-rose-400">🏥 Hôpital / Clinique :</b> Soins & Urgences</span>
+              <span><b className="text-emerald-400">🌲 Forêt :</b> Bois de chauffe & Abri</span>
+              <span><b className="text-indigo-400">📡 Émetteur TDF :</b> Point haut & Radio secours</span>
+            </div>
+            <button
+              onClick={() => handleSelectRegion('dept-66')}
+              className="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/60 text-amber-300 font-mono text-[10px] font-bold cursor-pointer"
+            >
+              📍 Zoom rapide Dépt 66 (Pyrénées-Orientales)
+            </button>
           </div>
 
           {/* LEAFLET MAP CONTAINER */}
@@ -1964,6 +2017,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                         <span className="text-sm shrink-0">
                           {wp.type === 'water'
                             ? '💧'
+                            : isLakeOrWaterbody(wp)
+                            ? '🌊'
                             : wp.type === 'water-raw'
                             ? '🚰'
                             : wp.type === 'shelter'
