@@ -53,38 +53,38 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
     <div className="space-y-6 min-w-0">
       {/* 1. LE QG — LARGE BOLD HEADER */}
       <div
-        className={`border rounded-lg p-5 sm:p-6 relative overflow-hidden ${
+        className={`border rounded-xl sm:rounded-lg p-4 sm:p-6 relative overflow-hidden ${
           ecoMode
             ? 'bg-neutral-950 border-neutral-800'
             : 'bg-[#221e16] border-amber-800/40'
         }`}
       >
         <div className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-amber-500" />
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <div className="flex items-center gap-4 min-w-0">
-            <div className="w-16 h-16 rounded-md bg-black border-2 border-amber-500 p-2 shrink-0 flex items-center justify-center shadow-lg">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-5">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-md bg-black border-2 border-amber-500 p-1.5 sm:p-2 shrink-0 flex items-center justify-center shadow-lg">
               <img
-                src="/assets/aistudio/noir_233aab2b.png"
+                src="./assets/aistudio/noir_233aab2b.png"
                 alt="Logo Sentinel"
                 className="w-full h-full object-contain invert"
               />
             </div>
 
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-amber-400 uppercase tracking-wider">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-amber-400 uppercase tracking-wider">
                 <span className="font-bold">SENTINEL PACK SURVIE</span>
                 <span className="text-neutral-600">·</span>
                 <span className="px-2 py-0.5 rounded-sm bg-amber-950/90 border border-amber-600 text-amber-300 font-bold text-[10px]">
                   {ecoMode ? 'ECO POWER OLED ACTIF' : 'MODE STANDARD'}
                 </span>
               </div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-amber-50 uppercase tracking-widest mt-1 leading-none">
+              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-amber-50 uppercase tracking-wider sm:tracking-widest mt-1 leading-none">
                 {isFr ? 'LE QG DU SENTINEL' : 'THE SENTINEL HQ'}
               </h1>
-              <div className="text-xl sm:text-2xl lg:text-3xl font-black text-amber-400 uppercase tracking-[0.15em] mt-1.5 leading-tight">
+              <div className="text-sm sm:text-2xl lg:text-3xl font-black text-amber-400 uppercase tracking-[0.12em] sm:tracking-[0.15em] mt-1 leading-tight">
                 {isFr ? 'LE QUARTIER GÉNÉRAL' : 'THE HEADQUARTERS'}
               </div>
-              <p className="text-xs sm:text-sm text-stone-300 mt-1.5">
+              <p className="text-xs sm:text-sm text-stone-300 mt-1.5 leading-relaxed">
                 {isFr
                   ? 'Quartier Général Autonome : Eau potable & Hôpitaux de France, Documentation d’Urgence (8 Secours + 72h), Stocks de Survie & IA.'
                   : 'Autonomous HQ: France Water & Hospitals Map, Emergency Documentation (8 First Aid + 72h), Survival Stocks & Local AI.'}
@@ -92,34 +92,35 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
+            {/* Mobile ONLY button — Hidden on Computer/Desktop (md:hidden) */}
             <button
               onClick={() => window.dispatchEvent(new Event('sentinel-open-mobile-install'))}
-              className="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-sm flex items-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/40"
+              className="md:hidden col-span-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/40"
             >
-              <Smartphone className="w-4 h-4" />
-              <span>{isFr ? '📲 Installer sur Téléphone' : '📲 Install on Phone'}</span>
+              <Smartphone className="w-4 h-4 shrink-0" />
+              <span>{isFr ? '📲 Installer l’App sur ce Téléphone' : '📲 Install App on This Phone'}</span>
             </button>
             <button
               onClick={() => onNavigate('tactical-map')}
-              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-sm flex items-center gap-2 cursor-pointer"
+              className="px-3 sm:px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-lg sm:rounded-sm flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
             >
-              <MapPin className="w-4 h-4" />
-              <span>{isFr ? 'Carte Eau & Hôpitaux' : 'Water & Hospitals Map'}</span>
+              <MapPin className="w-4 h-4 shrink-0" />
+              <span className="truncate">{isFr ? 'Carte Eau & Hôpitaux' : 'Water & Hospitals'}</span>
             </button>
             <button
               onClick={() => onNavigate('emergency-docs')}
-              className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-amber-200 border border-amber-700/60 font-bold text-xs rounded-sm flex items-center gap-2 cursor-pointer"
+              className="px-3 sm:px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-amber-200 border border-amber-700/60 font-bold text-xs rounded-lg sm:rounded-sm flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
             >
-              <BookOpen className="w-4 h-4 text-amber-400" />
-              <span>{isFr ? 'Documentation d’Urgence' : 'Emergency Docs'}</span>
+              <BookOpen className="w-4 h-4 text-amber-400 shrink-0" />
+              <span className="truncate">{isFr ? 'Doc d’Urgence' : 'Emergency Docs'}</span>
             </button>
             <button
               onClick={() => onNavigate('stocks')}
-              className="px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-emerald-300 border border-emerald-700/60 font-bold text-xs rounded-sm flex items-center gap-2 cursor-pointer"
+              className="col-span-2 sm:col-span-1 px-3 sm:px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-emerald-300 border border-emerald-700/60 font-bold text-xs rounded-lg sm:rounded-sm flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
             >
-              <Package className="w-4 h-4 text-emerald-400" />
-              <span>{isFr ? 'Stock de Survie' : 'Survival Stocks'}</span>
+              <Package className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span className="truncate">{isFr ? 'Stock de Survie' : 'Survival Stocks'}</span>
             </button>
           </div>
         </div>

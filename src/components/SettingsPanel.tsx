@@ -481,18 +481,26 @@ pause
 
       {/* MONITEUR RESSOURCES SYSTÈME EN TEMPS RÉEL (Processeur, Mémoire RAM, Alimentation, État Réseau) */}
       <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4 sm:p-5 space-y-3">
-        <div className="flex items-center justify-between border-b border-neutral-800 pb-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-2.5">
           <div className="flex items-center gap-2">
             <Cpu className="w-4 h-4 text-amber-400" />
             <h2 className="text-sm font-bold text-white uppercase font-mono">
               {isFr
-                ? 'Moniteur Ressources Système (Temps Réel)'
-                : 'Real-Time System Resource Monitor'}
+                ? 'Moniteur Ressources Système & Connexion Mobile'
+                : 'Real-Time System Monitor & Mobile Sync'}
             </h2>
           </div>
-          <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black border border-neutral-800 text-amber-400">
-            {isFr ? 'SONDE LOCALE ACTIVE' : 'LIVE LOCAL TELEMETRY'}
-          </span>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => window.dispatchEvent(new Event('sentinel-open-mobile-install'))}
+              className="px-3 py-1 rounded bg-emerald-500 hover:bg-emerald-400 text-black font-mono text-[11px] font-extrabold flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>📲 {isFr ? 'Envoyer / QR Code vers Téléphone' : 'Send / QR Code to Phone'}</span>
+            </button>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-black border border-neutral-800 text-amber-400">
+              {isFr ? 'SONDE LOCALE ACTIVE' : 'LIVE LOCAL TELEMETRY'}
+            </span>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono">

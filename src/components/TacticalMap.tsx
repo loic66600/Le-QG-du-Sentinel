@@ -1781,7 +1781,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
           </div>
 
           {/* LEAFLET MAP CONTAINER */}
-          <div className="relative w-full h-[460px] sm:h-[500px] rounded-md border border-neutral-800 overflow-hidden bg-black">
+          <div className="relative w-full h-[350px] sm:h-[500px] rounded-md border border-neutral-800 overflow-hidden bg-black">
             <div
               ref={mapContainerRef}
               className={`w-full h-full ${

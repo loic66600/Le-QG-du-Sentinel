@@ -45,9 +45,14 @@ function systemTelemetryPlugin(): Plugin {
         const nets = os.networkInterfaces();
         const lanIps: string[] = [];
         for (const name of Object.keys(nets)) {
+          const isVirtual = /vethernet|wsl|virtual|vbox|docker|vmware/i.test(name);
           for (const net of nets[name] || []) {
             if (net.family === 'IPv4' && !net.internal) {
-              lanIps.push(net.address);
+              if (!isVirtual && (net.address.startsWith('192.168.') || net.address.startsWith('10.'))) {
+                lanIps.unshift(net.address);
+              } else {
+                lanIps.push(net.address);
+              }
             }
           }
         }
@@ -143,6 +148,7 @@ function systemTelemetryPlugin(): Plugin {
 
 export default defineConfig(() => {
   return {
+    base: './',
     plugins: [react(), tailwindcss(), systemTelemetryPlugin()],
     resolve: {
       alias: {

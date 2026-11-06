@@ -57,8 +57,8 @@ export default function App() {
         onToggleEcoMode={toggleEcoMode}
       />
 
-      {/* Main Viewport Container — Uses full width smoothly */}
-      <main className="flex-1 w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 py-5 sm:py-7 min-w-0">
+      {/* Main Viewport Container — Uses full width smoothly, with bottom padding on mobile for the fixed bottom dock */}
+      <main className="flex-1 w-full max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-10 pt-3.5 sm:pt-7 pb-24 md:pb-7 min-w-0">
         {currentTab === 'command-center' && (
           <CommandCenter language={language} onNavigate={setCurrentTab} ecoMode={ecoMode} />
         )}
@@ -99,17 +99,17 @@ export default function App() {
 
       {/* Compact Air-Gapped Footer */}
       <footer
-        className={`border-t py-3.5 text-xs ${
+        className={`border-t py-3.5 mb-14 md:mb-0 text-xs ${
           ecoMode
             ? 'border-neutral-800 bg-black text-stone-400'
             : 'border-amber-800/30 bg-[#1a1712] text-slate-400'
         }`}
       >
-        <div className="w-full max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-10 flex flex-wrap items-center justify-between gap-2">
+        <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-10 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-4 h-4 rounded-sm bg-slate-900 border border-amber-500/60 p-0.5 flex items-center justify-center shrink-0">
               <img
-                src="/assets/aistudio/noir_233aab2b.png"
+                src="./assets/aistudio/noir_233aab2b.png"
                 alt="Logo Sentinel"
                 className="w-full h-full object-contain invert"
               />
