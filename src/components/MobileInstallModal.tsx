@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Language } from '../types/sentinel';
 import { FIRST_AID_URGENCIES } from '../data/firstAidUrgencies';
-import { DRUG_REFERENCE_DB } from '../data/drugReferenceDatabase';
+import { EMERGENCY_DRUGS } from '../data/drugReferenceDatabase';
 import { FRANCE_EXTENDED_POIS } from '../data/franceMapDatabase';
 import {
   Smartphone,
@@ -100,7 +100,7 @@ export const MobileInstallModal: React.FC<MobileInstallModalProps> = ({
     } catch {}
 
     const firstAidJson = JSON.stringify(FIRST_AID_URGENCIES);
-    const drugsJson = JSON.stringify(DRUG_REFERENCE_DB);
+    const drugsJson = JSON.stringify(EMERGENCY_DRUGS);
     const poisJson = JSON.stringify(FRANCE_EXTENDED_POIS.slice(0, 260));
     const familyJson = JSON.stringify(
       familyData || {
@@ -303,11 +303,11 @@ export const MobileInstallModal: React.FC<MobileInstallModalProps> = ({
       el.innerHTML = '<h2 style="color:#fbbf24;margin-bottom:10px;font-size:17px;">🫀 8 URGENCES VITALES DE PREMIERS SECOURS</h2>' +
         FIRST_AID.map(u => \`
           <div class="card">
-            <span class="tag">\${u.GoldenHourFr}</span>
-            <div class="card-title">\${u.icon} \${u.titleFr}</div>
-            <p style="font-size:12px;color:#a8a29e;margin-bottom:8px;"><b>Signes :</b> \${u.symptomsFr.join(' · ')}</p>
-            <ul>\${u.stepsFr.map(s => '<li>' + s + '</li>').join('')}</ul>
-            <div class="warn"><b>À NE JAMAIS FAIRE :</b> \${u.neverDoFr.join(' · ')}</div>
+            <span class="tag">\${u.badgeFr || ''}</span>
+            <div class="card-title">\${u.titleFr}</div>
+            <p style="font-size:12px;color:#a8a29e;margin-bottom:8px;"><b>Signes :</b> \${(u.signsFr || []).join(' · ')}</p>
+            <ul>\${(u.actionsFr || []).map(s => '<li>' + s + '</li>').join('')}</ul>
+            <div class="warn"><b>À NE JAMAIS FAIRE :</b> \${u.neverDoFr || ''}</div>
           </div>
         \`).join('');
     }
@@ -336,12 +336,12 @@ export const MobileInstallModal: React.FC<MobileInstallModalProps> = ({
         <input type="text" placeholder="Rechercher molécule ou symptôme..." value="\${q}" oninput="renderMeds(this.value)" />
       \` + filtered.map(d => \`
         <div class="card">
-          <span class="tag">\${d.categoryFr}</span>
+          <span class="tag">\${d.categoryLabelFr || ''} · \${d.dci || ''}</span>
           <div class="card-title">\${d.nameFr}</div>
           <p style="font-size:12px;color:#e7e5e4;margin-bottom:4px;"><b>Indications :</b> \${d.indicationsFr}</p>
-          <p style="font-size:12px;color:#6ee7b7;margin-bottom:4px;"><b>Adulte :</b> \${d.adultDoseFr} (Max : \${d.maxDailyFr})</p>
+          <p style="font-size:12px;color:#6ee7b7;margin-bottom:4px;"><b>Adulte :</b> \${d.adultDoseFr}</p>
           <p style="font-size:12px;color:#93c5fd;margin-bottom:4px;"><b>Enfant :</b> \${d.childDoseFr}</p>
-          <div class="warn"><b>Contre-indications :</b> \${d.contraindicationsFr}</div>
+          <div class="warn"><b>Contre-indications :</b> \${Array.isArray(d.contraindicationsFr) ? d.contraindicationsFr.join(' · ') : (d.contraindicationsFr || '')}</div>
         </div>
       \`).join('');
     }
