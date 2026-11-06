@@ -2,9 +2,8 @@
 node_modules/
 bun.lock
 
-# Build outputs
+# Build outputs (dist/ and docs/ are kept tracked for instant GitHub Pages support)
 build/
-dist/
 coverage/
 
 # Environment & local secrets

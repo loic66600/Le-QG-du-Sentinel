@@ -1,69 +1,9 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
-/*
-  Field-manual palette: khaki, beige, olive drab.
-  Existing Tailwind color names are remapped so the whole UI
-  shifts off slate/neon without rewriting every class.
-*/
 @theme {
-  --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
   --font-mono: "Cascadia Mono", "Consolas", "Courier New", ui-monospace, monospace;
-
-  --color-slate-50: #f6f1e4;
-  --color-slate-100: #ebe4d2;
-  --color-slate-200: #d9ccb0;
-  --color-slate-300: #c4b48c;
-  --color-slate-400: #a8946c;
-  --color-slate-500: #8a7654;
-  --color-slate-600: #6c5c42;
-  --color-slate-700: #524632;
-  --color-slate-800: #3a3224;
-  --color-slate-900: #262116;
-  --color-slate-950: #16130e;
-
-  --color-amber-200: #eadcb8;
-  --color-amber-300: #d6c28c;
-  --color-amber-400: #c4b07a;
-  --color-amber-500: #b49a62;
-  --color-amber-600: #8f7848;
-  --color-amber-800: #5a4c2e;
-  --color-amber-950: #2c2616;
-
-  --color-emerald-300: #c4c8a0;
-  --color-emerald-400: #a4aa74;
-  --color-emerald-500: #7e864c;
-  --color-emerald-600: #61683c;
-  --color-emerald-700: #4c5232;
-  --color-emerald-800: #3a3e26;
-  --color-emerald-900: #2a2e1c;
-  --color-emerald-950: #1a1e12;
-
-  --color-sky-300: #ddd4bc;
-  --color-sky-400: #c8b892;
-  --color-sky-500: #b09a6e;
-  --color-sky-600: #8c7854;
-  --color-sky-800: #4e4430;
-  --color-sky-950: #242018;
-
-  --color-blue-300: #d4cbb0;
-  --color-blue-500: #8a7a56;
-  --color-blue-600: #6c5e42;
-  --color-blue-800: #3e3628;
-  --color-blue-950: #1e1a14;
-
-  --color-indigo-400: #c4b896;
-  --color-indigo-500: #9a8b5f;
-
-  --color-purple-400: #c0a878;
-  --color-purple-500: #8a7350;
-
-  --color-rose-400: #c4895a;
-  --color-rose-500: #b07040;
-  --color-rose-900: #4a3020;
-  --color-rose-950: #2a1c14;
-
-  --color-stone-900: #2a2418;
 }
 
 @layer base {
@@ -87,7 +27,7 @@
 
   body {
     min-height: 100vh;
-    color: #efe6d2;
+    color: #f5f5f4;
     background-color: #050505;
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
@@ -95,12 +35,12 @@
   }
 
   ::selection {
-    background: rgba(180, 154, 98, 0.35);
-    color: #f6f1e4;
+    background: rgba(245, 158, 11, 0.35);
+    color: #ffffff;
   }
 
   :focus-visible {
-    outline: 2px solid #c4b07a;
+    outline: 2px solid #f59e0b;
     outline-offset: 2px;
   }
 
@@ -114,11 +54,11 @@
 
 @layer components {
   .field-webbing {
-    background-color: #16130e;
+    background-color: #0f172a;
     background-image:
-      linear-gradient(180deg, rgba(180, 154, 98, 0.06), transparent 28%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%23c4b07a' stroke-opacity='0.06' stroke-width='0.8'%3E%3Cpath d='M-10 40c30-18 50 12 90 4s58-8 90 14'/%3E%3Cpath d='M-10 90c40-10 48 16 88 6s70-16 102 8'/%3E%3Cpath d='M-10 140c36-14 62 8 96 2s64-6 94 12'/%3E%3Cpath d='M20 -10c8 40-6 70 8 110s4 50 6 80'/%3E%3Cpath d='M90 -10c-10 46 14 68 4 112s12 48 8 78'/%3E%3Cpath d='M150 -10c6 38-12 76 2 108s8 54 4 82'/%3E%3C/g%3E%3C/svg%3E");
-    box-shadow: inset 0 2px 0 #b49a62;
+      radial-gradient(at 20% 0%, rgba(14, 165, 233, 0.12) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(245, 158, 11, 0.10) 0px, transparent 50%);
+    box-shadow: inset 0 2px 0 #f59e0b;
   }
 
   .eco-oled-theme {
@@ -126,23 +66,29 @@
     background-image: none !important;
   }
 
-  .eco-oled-theme * {
-    animation: none !important;
-    transition-duration: 0ms !important;
-  }
-
+  /* Map Modes: filter ONLY the tile pane so markers stay vivid and Leaflet container classes are never lost */
   .leaflet-container {
-    background: #0a0907 !important;
-    filter: sepia(0.35) hue-rotate(8deg) saturate(0.6) contrast(1.05);
+    background: #e5e7eb !important;
+    font-family: var(--font-sans);
   }
-}
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .map-theme-color .leaflet-tile-pane {
+    filter: none !important;
+  }
+
+  .map-theme-oled .leaflet-container {
+    background: #0a0a0a !important;
+  }
+
+  .map-theme-oled .leaflet-tile-pane {
+    filter: brightness(0.88) invert(1) hue-rotate(185deg) contrast(1.15) saturate(0.85);
+  }
+
+  .map-theme-night .leaflet-container {
+    background: #090000 !important;
+  }
+
+  .map-theme-night .leaflet-tile-pane {
+    filter: grayscale(1) brightness(0.55) sepia(1) hue-rotate(-50deg) saturate(5);
   }
 }

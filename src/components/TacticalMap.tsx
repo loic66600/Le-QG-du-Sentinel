@@ -486,8 +486,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
   // Toggle whether real French landmarks are shown on the map
   const [showRealLandmarks, setShowRealLandmarks] = useState<boolean>(true);
 
-  // Map theme defaults to OLED for Eco Power
-  const [mapTheme, setMapTheme] = useState<'tactical-oled' | 'organic' | 'red-night'>('tactical-oled');
+  // Map theme defaults to full color ('organic') so rivers, lakes, forests and roads are crystal clear
+  const [mapTheme, setMapTheme] = useState<'tactical-oled' | 'organic' | 'red-night'>('organic');
   const [activeFilter, setActiveFilter] = useState<string>('all');
   const [selectedWaypoint, setSelectedWaypoint] = useState<Waypoint | null>(null);
 
@@ -1806,12 +1806,50 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                 </span>
               </button>
 
-              <button
-                onClick={() => setMapTheme(mapTheme === 'tactical-oled' ? 'organic' : mapTheme === 'organic' ? 'red-night' : 'tactical-oled')}
-                className="px-2 py-1 rounded-sm bg-black border border-neutral-800 text-amber-400 text-[11px] font-bold cursor-pointer"
-              >
-                {mapTheme === 'tactical-oled' ? '🎨 Mode Clair (Couleur)' : mapTheme === 'organic' ? '🌙 Mode Nuit Rouge' : '⚡ Mode Éco Noir'}
-              </button>
+              <div className="flex items-center bg-black border border-neutral-800 rounded-sm p-0.5 gap-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMapTheme('organic');
+                    setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
+                  }}
+                  className={`px-2 py-1 rounded-sm text-[11px] font-bold cursor-pointer ${
+                    mapTheme === 'organic'
+                      ? 'bg-amber-500 text-black'
+                      : 'text-stone-300 hover:text-white'
+                  }`}
+                >
+                  🗺️ {isFr ? 'Couleur' : 'Color'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMapTheme('tactical-oled');
+                    setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
+                  }}
+                  className={`px-2 py-1 rounded-sm text-[11px] font-bold cursor-pointer ${
+                    mapTheme === 'tactical-oled'
+                      ? 'bg-amber-500 text-black'
+                      : 'text-stone-300 hover:text-white'
+                  }`}
+                >
+                  🌑 {isFr ? 'Sombre' : 'Dark'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMapTheme('red-night');
+                    setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
+                  }}
+                  className={`px-2 py-1 rounded-sm text-[11px] font-bold cursor-pointer ${
+                    mapTheme === 'red-night'
+                      ? 'bg-rose-600 text-white'
+                      : 'text-stone-300 hover:text-white'
+                  }`}
+                >
+                  🔴 {isFr ? 'Nuit' : 'Night'}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -1833,18 +1871,17 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
             </button>
           </div>
 
-          {/* LEAFLET MAP CONTAINER */}
-          <div className="relative w-full h-[350px] sm:h-[500px] rounded-md border border-neutral-800 overflow-hidden bg-black">
-            <div
-              ref={mapContainerRef}
-              className={`w-full h-full ${
-                mapTheme === 'tactical-oled'
-                  ? 'brightness-90 invert hue-rotate-180 contrast-125'
-                  : mapTheme === 'red-night'
-                  ? 'grayscale brightness-50 sepia hue-rotate-[-50deg] saturate-[600%]'
-                  : ''
-              }`}
-            />
+          {/* LEAFLET MAP CONTAINER — Theme class on wrapper so React never overwrites Leaflet's leaflet-container class on mapContainerRef */}
+          <div
+            className={`relative w-full h-[350px] sm:h-[500px] rounded-md border border-neutral-800 overflow-hidden ${
+              mapTheme === 'organic'
+                ? 'map-theme-color bg-stone-200'
+                : mapTheme === 'red-night'
+                ? 'map-theme-night bg-black'
+                : 'map-theme-oled bg-black'
+            }`}
+          >
+            <div ref={mapContainerRef} className="w-full h-full" />
 
             {/* Center Crosshair */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[400] opacity-40 text-amber-400">
