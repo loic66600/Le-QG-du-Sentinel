@@ -117,13 +117,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header
-        className={`sticky top-0 z-50 w-full border-b ${
-          ecoMode
-            ? 'bg-black/95 backdrop-blur-md border-neutral-800'
-            : 'bg-[#1a1712]/95 backdrop-blur-md border-amber-800/40'
-        }`}
-      >
+      <header className="sticky top-0 z-50 w-full border-b border-[#343c4b] bg-[#14171d]/95 backdrop-blur-md">
         <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3 min-w-0">
           {/* Brand Logo */}
           <div
@@ -133,7 +127,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
             className="flex items-center gap-2.5 sm:gap-3 cursor-pointer min-w-0 group"
           >
-            <div className="w-9 h-9 rounded-lg bg-neutral-950 border border-amber-500/70 p-1 flex items-center justify-center shrink-0 group-hover:border-amber-300">
+            <div className="w-9 h-9 rounded-lg bg-[#242a34] border border-amber-500/70 p-1 flex items-center justify-center shrink-0 group-hover:border-amber-300">
               <img
                 src="./assets/aistudio/noir_233aab2b.png"
                 alt="Logo Le QG du Sentinel"
@@ -141,7 +135,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               />
             </div>
             <div className="leading-tight min-w-0">
-              <span className="text-xs sm:text-sm font-black tracking-wider text-amber-100 block uppercase truncate">
+              <span className="text-xs sm:text-sm font-black tracking-wider text-white block uppercase truncate">
                 {isFr ? 'LE QG DU SENTINEL' : 'THE SENTINEL HQ'}
               </span>
               <span className="text-[10px] sm:text-[11px] text-amber-400 font-extrabold block uppercase tracking-widest truncate">
@@ -161,7 +155,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg whitespace-nowrap cursor-pointer transition-colors ${
                     isActive
                       ? 'bg-amber-500 text-black shadow-sm'
-                      : 'text-stone-300 hover:text-white hover:bg-neutral-900'
+                      : 'text-zinc-300 hover:text-white hover:bg-[#242a34]'
                   }`}
                 >
                   {item.icon}
@@ -175,7 +169,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setIsMobileModalOpen(true)}
-              className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-emerald-500 text-black cursor-pointer shadow-sm"
+              className="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-extrabold bg-amber-500 text-black cursor-pointer shadow-sm"
             >
               <Smartphone className="w-3.5 h-3.5 shrink-0" />
               <span>{isFr ? 'Installer' : 'Install'}</span>
@@ -183,7 +177,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             <button
               onClick={onToggleLanguage}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-neutral-800 bg-neutral-950 text-stone-300 hover:border-amber-500 text-xs font-bold cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-[#3a4354] bg-[#242a34] text-zinc-200 hover:border-amber-500 text-xs font-bold cursor-pointer"
               title="FR / EN"
             >
               <Globe className="w-3.5 h-3.5 text-amber-400" />
@@ -193,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Tablet Navigation Row (768px to 1023px) */}
-        <div className="hidden md:grid lg:hidden grid-cols-7 gap-1 px-4 py-1.5 border-t border-neutral-800 bg-black">
+        <div className="hidden md:grid lg:hidden grid-cols-7 gap-1 px-4 py-1.5 border-t border-[#343c4b] bg-[#14171d]">
           {navItems.map(item => {
             const isActive = currentTab === item.id;
             return (
@@ -203,7 +197,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 className={`flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs rounded-md truncate cursor-pointer ${
                   isActive
                     ? 'bg-amber-500 text-black font-bold'
-                    : 'text-stone-300 hover:text-white bg-neutral-950'
+                    : 'text-zinc-300 hover:text-white bg-[#242a34]'
                 }`}
               >
                 {item.icon}
@@ -216,7 +210,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* MOBILE BOTTOM BAR (< 768px) */}
       <nav
-        className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-neutral-800 bg-black/95 backdrop-blur-lg px-2 py-1.5 grid grid-cols-5 gap-1"
+        className="md:hidden fixed bottom-0 inset-x-0 z-50 border-t border-[#343c4b] bg-[#14171d]/95 backdrop-blur-lg px-2 py-1.5 grid grid-cols-5 gap-1"
         style={{ paddingBottom: 'calc(0.375rem + env(safe-area-inset-bottom, 0px))' }}
       >
         {primaryMobileTabs.map(item => {
@@ -232,7 +226,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg transition-colors cursor-pointer ${
                 isActive
                   ? 'bg-amber-500 text-black font-extrabold'
-                  : 'text-stone-400 hover:text-amber-200'
+                  : 'text-zinc-400 hover:text-amber-200'
               }`}
             >
               {item.icon}
@@ -248,7 +242,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className={`flex flex-col items-center justify-center py-1.5 px-1 rounded-lg transition-colors cursor-pointer ${
             isMobileDrawerOpen || isSecondaryActive
               ? 'bg-amber-500 text-black font-extrabold'
-              : 'text-stone-400 hover:text-amber-200'
+              : 'text-zinc-400 hover:text-amber-200'
           }`}
         >
           {isMobileDrawerOpen ? <X className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
@@ -261,20 +255,20 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* MOBILE DRAWER FOR SECONDARY TABS */}
       {isMobileDrawerOpen && (
         <div
-          className="md:hidden fixed inset-0 z-40 bg-black/80 backdrop-blur-xs flex flex-col justify-end pb-16"
+          className="md:hidden fixed inset-0 z-40 bg-black/75 backdrop-blur-xs flex flex-col justify-end pb-16"
           onClick={() => setIsMobileDrawerOpen(false)}
         >
           <div
-            className="bg-neutral-950 border-t-2 border-amber-500 rounded-t-2xl p-4 space-y-3 shadow-2xl"
+            className="bg-[#242a34] border-t-2 border-amber-500 rounded-t-2xl p-4 space-y-3 shadow-2xl"
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
+            <div className="flex items-center justify-between border-b border-[#3a4354] pb-2">
               <span className="text-xs font-bold text-amber-400 uppercase">
                 {isFr ? 'Autres Outils' : 'More Tools'}
               </span>
               <button
                 onClick={() => setIsMobileDrawerOpen(false)}
-                className="p-1 rounded-md bg-neutral-900 text-stone-400"
+                className="p-1 rounded-md bg-[#161920] text-zinc-400"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -294,7 +288,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className={`flex items-center gap-2.5 p-3 rounded-xl border text-left text-xs font-bold cursor-pointer ${
                       isActive
                         ? 'bg-amber-500 text-black border-amber-400'
-                        : 'bg-black text-stone-200 border-neutral-800'
+                        : 'bg-[#161920] text-zinc-200 border-[#3a4354]'
                     }`}
                   >
                     <div className={isActive ? 'text-black' : 'text-amber-400'}>{item.icon}</div>
@@ -309,7 +303,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 setIsMobileDrawerOpen(false);
                 setIsMobileModalOpen(true);
               }}
-              className="w-full py-3 px-4 rounded-xl bg-emerald-500 text-black text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-3 px-4 rounded-xl bg-amber-500 text-black text-xs font-extrabold flex items-center justify-center gap-2 cursor-pointer"
             >
               <Smartphone className="w-4 h-4 shrink-0" />
               <span>

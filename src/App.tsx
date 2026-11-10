@@ -13,7 +13,6 @@ import { SettingsPanel } from './components/SettingsPanel';
 export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('command-center');
   const [language, setLanguage] = useState<Language>('fr');
-  // ECO Power mode is enabled by default ("d'office en ECO Power")
   const [ecoMode, setEcoMode] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('sentinel_eco_mode_v2');
@@ -40,13 +39,7 @@ export default function App() {
   const isFr = language === 'fr';
 
   return (
-    <div
-      className={`min-h-screen w-full max-w-full overflow-x-hidden flex flex-col antialiased ${
-        ecoMode
-          ? 'eco-oled-theme bg-black text-stone-200 font-mono'
-          : 'bg-slate-950 text-slate-100 font-sans field-webbing'
-      }`}
-    >
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden flex flex-col antialiased bg-[#181c23] text-zinc-100 font-sans">
       {/* Top Bar Navigation */}
       <Navbar
         currentTab={currentTab}
@@ -57,8 +50,8 @@ export default function App() {
         onToggleEcoMode={toggleEcoMode}
       />
 
-      {/* Main Viewport Container — Uses full width smoothly, with bottom padding on mobile for the fixed bottom dock */}
-      <main className="flex-1 w-full max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-10 pt-3.5 sm:pt-7 pb-24 md:pb-7 min-w-0">
+      {/* Main Viewport Container */}
+      <main className="flex-1 w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 pt-3.5 sm:pt-6 pb-24 md:pb-8 min-w-0">
         {currentTab === 'command-center' && (
           <CommandCenter language={language} onNavigate={setCurrentTab} ecoMode={ecoMode} />
         )}
@@ -97,37 +90,34 @@ export default function App() {
         )}
       </main>
 
-      {/* Compact Air-Gapped Footer */}
-      <footer
-        className={`border-t py-3.5 mb-14 md:mb-0 text-xs ${
-          ecoMode
-            ? 'border-neutral-800 bg-black text-stone-400'
-            : 'border-amber-800/30 bg-[#1a1712] text-slate-400'
-        }`}
-      >
-        <div className="w-full max-w-[1920px] mx-auto px-3 sm:px-6 lg:px-10 flex flex-wrap items-center justify-between gap-2">
+      {/* Compact Footer */}
+      <footer className="border-t border-[#2f3644] bg-[#14171d] py-3.5 mb-14 md:mb-0 text-xs text-zinc-400">
+        <div className="w-full max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <div className="w-4 h-4 rounded-sm bg-slate-900 border border-amber-500/60 p-0.5 flex items-center justify-center shrink-0">
+            <div className="w-4 h-4 rounded-sm bg-[#242a34] border border-amber-500/60 p-0.5 flex items-center justify-center shrink-0">
               <img
                 src="./assets/aistudio/noir_233aab2b.png"
                 alt="Logo Sentinel"
                 className="w-full h-full object-contain invert"
               />
             </div>
-            <span className="font-semibold tracking-wider text-amber-200 truncate">
-              LE QG · SENTINEL PACK SURVIE
+            <span className="font-bold tracking-wider text-zinc-200 truncate">
+              LE QG DU SENTINEL
             </span>
-            <span className="text-amber-700 hidden sm:inline">·</span>
+            <span className="text-zinc-600 hidden sm:inline">·</span>
             <span className="hidden sm:inline text-[11px] truncate">
-              {isFr ? 'Station autonome hors-ligne' : 'Autonomous offline station'}
+              {isFr ? 'Le Quartier Général autonome hors-ligne' : 'Autonomous offline headquarters'}
             </span>
           </div>
 
-          <div className="flex items-center gap-3 font-mono text-[11px]">
-            <span className="text-amber-400">
-              {ecoMode ? '⚡ ECO POWER ACTIF' : 'MODE STANDARD'}
-            </span>
-            <span className="text-slate-600">·</span>
+          <div className="flex items-center gap-3 text-[11px]">
+            <button
+              onClick={() => setCurrentTab('about')}
+              className="text-zinc-300 hover:text-amber-400 underline cursor-pointer"
+            >
+              {isFr ? 'À propos' : 'About'}
+            </button>
+            <span className="text-zinc-600">·</span>
             <span className="text-amber-400 font-semibold">
               {isFr ? 'Créé par LORN Digital Studio.' : 'Created by LORN Digital Studio.'}
             </span>

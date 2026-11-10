@@ -1378,65 +1378,105 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
       : null;
 
   return (
-    <div className="space-y-4 min-w-0">
-      {/* 1. BARRE UNIQUE ET ÉPURÉE : CHOIX DE LA ZONE + FILTRES CLAIRS + APPARENCE */}
-      <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4 space-y-3">
-        {/* Ligne 1 : Région + Localisation GPS + Couleur/Sombre + Outils */}
-        <div className="flex flex-wrap items-center justify-between gap-2.5">
-          <div className="flex flex-wrap items-center gap-2 min-w-0">
-            <div className="flex items-center gap-2 bg-black border border-amber-500/70 rounded-lg px-3 py-2 min-w-0">
-              <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
-              <select
-                id="region-select"
-                value={selectedRegionId}
-                onChange={(e) => handleSelectRegion(e.target.value)}
-                className="bg-black text-white text-xs sm:text-sm font-bold focus:outline-none cursor-pointer truncate max-w-[240px] sm:max-w-[320px]"
-              >
-                {FRENCH_REGIONS.map(reg => (
-                  <option key={reg.id} value={reg.id} className="bg-neutral-950 text-white">
-                    {isFr ? reg.nameFr : reg.nameEn}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <button
-              onClick={() => handleSelectRegion('dept-66')}
-              className={`px-3 py-2 rounded-lg text-xs font-bold border cursor-pointer ${
-                selectedRegionId === 'dept-66'
-                  ? 'bg-amber-500 text-black border-amber-400'
-                  : 'bg-neutral-900 hover:bg-neutral-800 text-amber-300 border-amber-600/50'
-              }`}
+    <div className="space-y-3 sm:space-y-4 min-w-0">
+      {/* 1. BARRE ULTRA-COMPACTE AVEC 2 MENUS DÉROULANTS (IDÉAL MOBILE & PC) */}
+      <div className="bg-[#242a34] border border-[#3a4354] rounded-xl p-3 sm:p-4 shadow-md space-y-2.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 items-center">
+          {/* Menu déroulant 1 : Région / Département */}
+          <div className="lg:col-span-4 flex items-center gap-2 bg-[#161920] border border-[#3a4354] rounded-lg px-3 py-2 min-w-0">
+            <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+            <select
+              id="region-select"
+              value={selectedRegionId}
+              onChange={(e) => handleSelectRegion(e.target.value)}
+              className="w-full bg-[#161920] text-white text-xs sm:text-sm font-bold focus:outline-none cursor-pointer truncate"
             >
-              📍 {isFr ? 'Dépt 66' : 'Dept 66'}
-            </button>
+              {FRENCH_REGIONS.map(reg => (
+                <option key={reg.id} value={reg.id} className="bg-[#161920] text-white">
+                  {isFr ? reg.nameFr : reg.nameEn}
+                </option>
+              ))}
+            </select>
+          </div>
 
+          {/* Menu déroulant 2 : Catégorie de repères (Remplace les 8 boutons + la légende) */}
+          <div className="lg:col-span-4 flex items-center gap-2 bg-[#161920] border border-[#3a4354] rounded-lg px-3 py-2 min-w-0">
+            <Layers className="w-4 h-4 text-amber-400 shrink-0" />
+            <select
+              id="category-select"
+              value={activeFilter}
+              onChange={(e) => setActiveFilter(e.target.value)}
+              className="w-full bg-[#161920] text-white text-xs sm:text-sm font-bold focus:outline-none cursor-pointer truncate"
+            >
+              <option value="all" className="bg-[#161920] text-white">
+                {isFr
+                  ? `📍 Tout afficher (${allWaypoints.length} lieux)`
+                  : `📍 Show All (${allWaypoints.length})`}
+              </option>
+              <option value="water" className="bg-[#161920] text-white">
+                {isFr
+                  ? `💧 Eau Potable — Boire directement (${allWaypoints.filter(w => w.type === 'water').length})`
+                  : `💧 Drinking Water (${allWaypoints.filter(w => w.type === 'water').length})`}
+              </option>
+              <option value="lakes" className="bg-[#161920] text-white">
+                {isFr
+                  ? `🌊 Lacs & Plans d’Eau — Filtrer + bouillir (${allWaypoints.filter(w => isLakeOrWaterbody(w)).length})`
+                  : `🌊 Lakes & Reservoirs (${allWaypoints.filter(w => isLakeOrWaterbody(w)).length})`}
+              </option>
+              <option value="water-raw" className="bg-[#161920] text-white">
+                {isFr
+                  ? `🚰 Sources & Puits — Faire bouillir (${allWaypoints.filter(w => w.type === 'water-raw').length})`
+                  : `🚰 Springs & Wells (${allWaypoints.filter(w => w.type === 'water-raw').length})`}
+              </option>
+              <option value="medical" className="bg-[#161920] text-white">
+                {isFr
+                  ? `🏥 Hôpitaux & Cliniques (${allWaypoints.filter(w => w.type === 'medical').length})`
+                  : `🏥 Hospitals & Clinics (${allWaypoints.filter(w => w.type === 'medical').length})`}
+              </option>
+              <option value="camp" className="bg-[#161920] text-white">
+                {isFr
+                  ? `🌲 Grandes Forêts — Bois & Abri (${allWaypoints.filter(w => w.type === 'camp').length})`
+                  : `🌲 Major Forests (${allWaypoints.filter(w => w.type === 'camp').length})`}
+              </option>
+              <option value="radio" className="bg-[#161920] text-white">
+                {isFr
+                  ? `📡 Émetteurs Radio TDF (${allWaypoints.filter(w => w.type === 'radio').length})`
+                  : `📡 TDF Radio Transmitters (${allWaypoints.filter(w => w.type === 'radio').length})`}
+              </option>
+              <option value="shelter" className="bg-[#161920] text-white">
+                {isFr
+                  ? `🏕️ Refuges & Abris (${allWaypoints.filter(w => w.type === 'shelter').length})`
+                  : `🏕️ Refuges & Shelters (${allWaypoints.filter(w => w.type === 'shelter').length})`}
+              </option>
+            </select>
+          </div>
+
+          {/* Boutons rapides compacts (GPS, Carte Claire/Sombre, + Lieu, Outils) */}
+          <div className="sm:col-span-2 lg:col-span-4 flex flex-wrap items-center justify-between sm:justify-end gap-1.5">
             <button
               onClick={handleLocateMe}
               disabled={gpsTracking}
-              className="px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-2 bg-[#161920] hover:bg-[#1e232d] border border-[#3a4354] text-white font-bold text-xs rounded-lg flex items-center gap-1.5 cursor-pointer"
             >
-              <Locate className="w-3.5 h-3.5" />
-              <span>{gpsTracking ? 'GPS...' : isFr ? 'Autour de moi (GPS)' : 'Near Me (GPS)'}</span>
+              <Locate className="w-3.5 h-3.5 text-amber-400" />
+              <span>{gpsTracking ? '...' : 'GPS'}</span>
             </button>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Sélecteur Couleur / Sombre / Nuit */}
-            <div className="flex items-center bg-black border border-neutral-800 rounded-lg p-1 gap-1">
+            {/* Bascule Claire / Sombre (Mode Rouge supprimé) */}
+            <div className="flex items-center bg-[#161920] border border-[#3a4354] rounded-lg p-0.5 gap-0.5">
               <button
                 type="button"
                 onClick={() => {
                   setMapTheme('organic');
                   setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
                 }}
-                className={`px-2.5 py-1 rounded-md text-xs font-bold cursor-pointer ${
+                className={`px-2.5 py-1.5 rounded-md text-xs font-bold cursor-pointer ${
                   mapTheme === 'organic'
                     ? 'bg-amber-500 text-black'
-                    : 'text-stone-300 hover:text-white'
+                    : 'text-zinc-300 hover:text-white'
                 }`}
               >
-                🗺️ {isFr ? 'Couleur' : 'Color'}
+                🗺️ {isFr ? 'Claire' : 'Light'}
               </button>
               <button
                 type="button"
@@ -1444,27 +1484,13 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                   setMapTheme('tactical-oled');
                   setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
                 }}
-                className={`px-2.5 py-1 rounded-md text-xs font-bold cursor-pointer ${
-                  mapTheme === 'tactical-oled'
+                className={`px-2.5 py-1.5 rounded-md text-xs font-bold cursor-pointer ${
+                  mapTheme !== 'organic'
                     ? 'bg-amber-500 text-black'
-                    : 'text-stone-300 hover:text-white'
+                    : 'text-zinc-300 hover:text-white'
                 }`}
               >
-                🌑 {isFr ? 'Sombre' : 'Dark'}
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setMapTheme('red-night');
-                  setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
-                }}
-                className={`px-2.5 py-1 rounded-md text-xs font-bold cursor-pointer ${
-                  mapTheme === 'red-night'
-                    ? 'bg-rose-600 text-white'
-                    : 'text-stone-300 hover:text-white'
-                }`}
-              >
-                🔴 {isFr ? 'Nuit' : 'Night'}
+                🌙 {isFr ? 'Sombre' : 'Dark'}
               </button>
             </div>
 
@@ -1476,92 +1502,32 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
               className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>{isFr ? 'Ajouter un lieu' : 'Add Point'}</span>
+              <span>{isFr ? 'Lieu' : 'Add'}</span>
             </button>
 
             <button
               onClick={() => setIsPlacementPanelOpen(!isPlacementPanelOpen)}
               className={`px-2.5 py-2 text-xs rounded-lg border cursor-pointer ${
                 isPlacementPanelOpen || isTriangulating
-                  ? 'bg-neutral-800 text-amber-300 border-amber-500'
-                  : 'bg-black text-stone-400 hover:text-white border-neutral-800'
+                  ? 'bg-amber-500 text-black border-amber-400 font-bold'
+                  : 'bg-[#161920] text-zinc-300 hover:text-white border-[#3a4354]'
               }`}
+              title={isFr ? 'Outils avancés' : 'Advanced tools'}
             >
-              🛠️ {isFr ? 'Plus d’outils' : 'More Tools'}
+              🛠️
             </button>
           </div>
         </div>
-
-        {/* Ligne 2 : Gros boutons filtres simples en 1 clic */}
-        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-neutral-800/80">
-          {[
-            { id: 'all', label: isFr ? `Tout voir (${allWaypoints.length})` : `All (${allWaypoints.length})` },
-            {
-              id: 'water',
-              label: isFr
-                ? `💧 Eau Potable (${allWaypoints.filter(w => w.type === 'water').length})`
-                : `💧 Drinking Water (${allWaypoints.filter(w => w.type === 'water').length})`
-            },
-            {
-              id: 'lakes',
-              label: isFr
-                ? `🌊 Lacs & Plans d’Eau (${allWaypoints.filter(w => isLakeOrWaterbody(w)).length})`
-                : `🌊 Lakes (${allWaypoints.filter(w => isLakeOrWaterbody(w)).length})`
-            },
-            {
-              id: 'water-raw',
-              label: isFr
-                ? `🚰 Sources & Puits (${allWaypoints.filter(w => w.type === 'water-raw').length})`
-                : `🚰 Springs (${allWaypoints.filter(w => w.type === 'water-raw').length})`
-            },
-            {
-              id: 'medical',
-              label: isFr
-                ? `🏥 Hôpitaux & Cliniques (${allWaypoints.filter(w => w.type === 'medical').length})`
-                : `🏥 Hospitals (${allWaypoints.filter(w => w.type === 'medical').length})`
-            },
-            {
-              id: 'camp',
-              label: isFr
-                ? `🌲 Forêts (${allWaypoints.filter(w => w.type === 'camp').length})`
-                : `🌲 Forests (${allWaypoints.filter(w => w.type === 'camp').length})`
-            },
-            {
-              id: 'radio',
-              label: isFr
-                ? `📡 Émetteurs TDF (${allWaypoints.filter(w => w.type === 'radio').length})`
-                : `📡 Radio TDF (${allWaypoints.filter(w => w.type === 'radio').length})`
-            },
-            {
-              id: 'shelter',
-              label: isFr
-                ? `🏕️ Refuges (${allWaypoints.filter(w => w.type === 'shelter').length})`
-                : `🏕️ Refuges (${allWaypoints.filter(w => w.type === 'shelter').length})`
-            }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveFilter(tab.id)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
-                activeFilter === tab.id
-                  ? 'bg-amber-500 text-black shadow-sm'
-                  : 'text-stone-300 hover:text-white bg-black border border-neutral-800'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* PANNEAU OPTIONNEL : OUTILS AVANCÉS (Masqué par défaut pour ne pas surcharger l'écran) */}
+      {/* PANNEAU OPTIONNEL : OUTILS AVANCÉS */}
       {isPlacementPanelOpen && (
-        <div className="bg-neutral-950 border border-neutral-700 rounded-xl p-4 space-y-3 text-xs">
-          <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
+        <div className="bg-[#242a34] border border-[#3a4354] rounded-xl p-4 space-y-3 text-xs shadow-md">
+          <div className="flex items-center justify-between border-b border-[#343c4b] pb-2">
             <span className="font-bold text-amber-400 uppercase">
               🛠️ {isFr ? 'Outils Avancés (Position manuelle, Sauvegarde Zone, Boussole, GPX)' : 'Advanced Tools'}
             </span>
-            <button onClick={() => setIsPlacementPanelOpen(false)} className="text-stone-400 hover:text-white">
+            <button onClick={() => setIsPlacementPanelOpen(false)} className="text-zinc-400 hover:text-white">
               ✕
             </button>
           </div>
@@ -1581,7 +1547,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
             <button
               onClick={handleScanOsmWaterAndHospitals}
               disabled={isScanningOsm}
-              className="px-3 py-1.5 rounded-lg bg-sky-950 hover:bg-sky-900 border border-sky-600 text-sky-200 font-bold flex items-center gap-1.5 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#161920] hover:bg-[#1e232d] border border-[#3a4354] text-amber-300 font-bold flex items-center gap-1.5 cursor-pointer"
             >
               <RotateCcw className={`w-3.5 h-3.5 ${isScanningOsm ? 'animate-spin' : ''}`} />
               <span>
@@ -1593,63 +1559,63 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
 
             <button
               onClick={() => setClusteringEnabled(!clusteringEnabled)}
-              className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-stone-200 cursor-pointer"
+              className="px-3 py-1.5 rounded-lg bg-[#161920] border border-[#3a4354] text-zinc-200 cursor-pointer"
             >
               {isFr
-                ? `Regrouper les points de loin : ${clusteringEnabled ? 'OUI' : 'NON'}`
+                ? `Regrouper de loin : ${clusteringEnabled ? 'OUI' : 'NON'}`
                 : `Group points: ${clusteringEnabled ? 'YES' : 'NO'}`}
             </button>
 
             <button
               onClick={() => setIsTriangulating(!isTriangulating)}
-              className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-emerald-300 cursor-pointer flex items-center gap-1"
+              className="px-3 py-1.5 rounded-lg bg-[#161920] border border-[#3a4354] text-zinc-200 cursor-pointer flex items-center gap-1"
             >
-              <Triangle className="w-3.5 h-3.5" />
+              <Triangle className="w-3.5 h-3.5 text-amber-400" />
               <span>{isFr ? 'Boussole sans GPS' : 'Compass Resection'}</span>
             </button>
 
             <button
               onClick={handleExportGpx}
-              className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-stone-300 cursor-pointer flex items-center gap-1"
+              className="px-3 py-1.5 rounded-lg bg-[#161920] border border-[#3a4354] text-zinc-200 cursor-pointer flex items-center gap-1"
             >
-              <Download className="w-3.5 h-3.5" />
+              <Download className="w-3.5 h-3.5 text-amber-400" />
               <span>{isFr ? 'Exporter GPX' : 'Export GPX'}</span>
             </button>
           </div>
 
-          <form onSubmit={handleApplyManualCoordinates} className="flex flex-wrap items-end gap-2 pt-2 border-t border-neutral-800">
+          <form onSubmit={handleApplyManualCoordinates} className="flex flex-wrap items-end gap-2 pt-2 border-t border-[#343c4b]">
             <div>
-              <label className="block text-[10px] text-stone-400">Latitude</label>
+              <label className="block text-[10px] text-zinc-400">Latitude</label>
               <input
                 type="number"
                 step="0.0001"
                 value={manualLatInput}
                 onChange={e => setManualLatInput(e.target.value)}
-                className="bg-black border border-neutral-800 rounded-md px-2 py-1 text-sky-300 w-28"
+                className="bg-[#161920] border border-[#3a4354] rounded-md px-2 py-1 text-white w-28"
               />
             </div>
             <div>
-              <label className="block text-[10px] text-stone-400">Longitude</label>
+              <label className="block text-[10px] text-zinc-400">Longitude</label>
               <input
                 type="number"
                 step="0.0001"
                 value={manualLonInput}
                 onChange={e => setManualLonInput(e.target.value)}
-                className="bg-black border border-neutral-800 rounded-md px-2 py-1 text-sky-300 w-28"
+                className="bg-[#161920] border border-[#3a4354] rounded-md px-2 py-1 text-white w-28"
               />
             </div>
-            <button type="submit" className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded-md">
-              {isFr ? 'Aller à ces coordonnées' : 'Apply'}
+            <button type="submit" className="px-3 py-1 bg-amber-500 text-black font-bold rounded-md">
+              {isFr ? 'Aller' : 'Go'}
             </button>
 
             <div className="flex items-center gap-2 ml-auto">
               <Footprints className="w-4 h-4 text-amber-400" />
-              <span className="text-stone-400">{isFr ? 'Pas :' : 'Paces:'}</span>
+              <span className="text-zinc-400">{isFr ? 'Pas :' : 'Paces:'}</span>
               <input
                 type="number"
                 value={pacesCount}
                 onChange={e => setPacesCount(parseInt(e.target.value) || 0)}
-                className="w-16 bg-black border border-neutral-800 rounded-md px-2 py-1 text-amber-300 text-center"
+                className="w-16 bg-[#161920] border border-[#3a4354] rounded-md px-2 py-1 text-amber-300 text-center"
               />
               <span className="text-amber-400 font-bold">= {(pacesCount * userPaceLengthMeters).toFixed(0)} m</span>
             </div>
@@ -1659,25 +1625,25 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
 
       {/* OPTIONAL PANEL: NO-GPS COMPASS RESECTION */}
       {isTriangulating && (
-        <div className="bg-neutral-950 border border-emerald-500/60 rounded-xl p-4 space-y-3 text-xs font-mono">
-          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-2">
-            <span className="font-bold text-emerald-400 uppercase">
+        <div className="bg-[#242a34] border border-[#3a4354] rounded-xl p-4 space-y-3 text-xs shadow-md">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#343c4b] pb-2">
+            <span className="font-bold text-amber-400 uppercase">
               {isFr ? 'Pointage Sans GPS (Boussole)' : 'No-GPS Compass Positioning'}
             </span>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setTriangMode('resection')}
-                className={`px-2 py-1 rounded-sm ${triangMode === 'resection' ? 'bg-emerald-600 text-white font-bold' : 'bg-neutral-900 text-stone-400'}`}
+                className={`px-2.5 py-1 rounded ${triangMode === 'resection' ? 'bg-amber-500 text-black font-bold' : 'bg-[#161920] text-zinc-400'}`}
               >
                 {isFr ? '2 Repères Visuels' : '2 Landmarks'}
               </button>
               <button
                 onClick={() => setTriangMode('dead-reckoning')}
-                className={`px-2 py-1 rounded-sm ${triangMode === 'dead-reckoning' ? 'bg-amber-500 text-black font-bold' : 'bg-neutral-900 text-stone-400'}`}
+                className={`px-2.5 py-1 rounded ${triangMode === 'dead-reckoning' ? 'bg-amber-500 text-black font-bold' : 'bg-[#161920] text-zinc-400'}`}
               >
                 {isFr ? 'Cap + Distance' : 'Bearing + Dist'}
               </button>
-              <button onClick={() => setIsTriangulating(false)} className="text-stone-400 hover:text-white px-1">
+              <button onClick={() => setIsTriangulating(false)} className="text-zinc-400 hover:text-white px-1">
                 ✕
               </button>
             </div>
@@ -1685,50 +1651,50 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
 
           {triangMode === 'resection' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div className="p-2.5 bg-black border border-neutral-800 rounded-sm space-y-2">
-                <div className="text-emerald-400 font-bold">{isFr ? 'Repère Visuel 1' : 'Landmark 1'}</div>
+              <div className="p-2.5 bg-[#161920] border border-[#3a4354] rounded-lg space-y-2">
+                <div className="text-amber-400 font-bold">{isFr ? 'Repère Visuel 1' : 'Landmark 1'}</div>
                 <select
                   value={triangPoint1Id}
                   onChange={e => setTriangPoint1Id(e.target.value)}
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded-sm px-2 py-1 text-stone-200"
+                  className="w-full bg-[#242a34] border border-[#3a4354] rounded px-2 py-1 text-white"
                 >
                   {allWaypoints.map(wp => (
                     <option key={wp.id} value={wp.id}>{wp.name}</option>
                   ))}
                 </select>
                 <div className="flex items-center gap-2">
-                  <span className="text-stone-400">{isFr ? 'Angle Boussole (°):' : 'Azimuth (°):'}</span>
+                  <span className="text-zinc-400">{isFr ? 'Angle Boussole (°):' : 'Azimuth (°):'}</span>
                   <input
                     type="number"
                     min="0"
                     max="359"
                     value={triangBearing1}
                     onChange={e => setTriangBearing1(Number(e.target.value) || 0)}
-                    className="w-20 bg-neutral-900 border border-neutral-800 px-2 py-0.5 text-emerald-300"
+                    className="w-20 bg-[#242a34] border border-[#3a4354] px-2 py-0.5 text-amber-300"
                   />
                 </div>
               </div>
 
-              <div className="p-2.5 bg-black border border-neutral-800 rounded-sm space-y-2">
-                <div className="text-sky-400 font-bold">{isFr ? 'Repère Visuel 2' : 'Landmark 2'}</div>
+              <div className="p-2.5 bg-[#161920] border border-[#3a4354] rounded-lg space-y-2">
+                <div className="text-amber-400 font-bold">{isFr ? 'Repère Visuel 2' : 'Landmark 2'}</div>
                 <select
                   value={triangPoint2Id}
                   onChange={e => setTriangPoint2Id(e.target.value)}
-                  className="w-full bg-neutral-900 border border-neutral-800 rounded-sm px-2 py-1 text-stone-200"
+                  className="w-full bg-[#242a34] border border-[#3a4354] rounded px-2 py-1 text-white"
                 >
                   {allWaypoints.map(wp => (
                     <option key={wp.id} value={wp.id}>{wp.name}</option>
                   ))}
                 </select>
                 <div className="flex items-center gap-2">
-                  <span className="text-stone-400">{isFr ? 'Angle Boussole (°):' : 'Azimuth (°):'}</span>
+                  <span className="text-zinc-400">{isFr ? 'Angle Boussole (°):' : 'Azimuth (°):'}</span>
                   <input
                     type="number"
                     min="0"
                     max="359"
                     value={triangBearing2}
                     onChange={e => setTriangBearing2(Number(e.target.value) || 0)}
-                    className="w-20 bg-neutral-900 border border-neutral-800 px-2 py-0.5 text-sky-300"
+                    className="w-20 bg-[#242a34] border border-[#3a4354] px-2 py-0.5 text-amber-300"
                   />
                 </div>
               </div>
@@ -1736,7 +1702,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
               <div className="md:col-span-2 flex items-center gap-2">
                 <button
                   onClick={handleCalculateResection}
-                  className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-sm"
+                  className="px-3 py-1.5 bg-amber-500 text-black font-bold rounded"
                 >
                   {isFr ? 'Calculer ma position' : 'Calculate Position'}
                 </button>
@@ -1745,7 +1711,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                     clearSightlines();
                     setTriangResult(null);
                   }}
-                  className="px-3 py-1.5 bg-neutral-900 text-stone-300 rounded-sm border border-neutral-800"
+                  className="px-3 py-1.5 bg-[#161920] text-zinc-300 rounded border border-[#3a4354]"
                 >
                   {isFr ? 'Effacer' : 'Clear'}
                 </button>
@@ -1754,11 +1720,11 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-[10px] text-stone-400 mb-1">{isFr ? 'Point de départ' : 'Start Point'}</label>
+                <label className="block text-[10px] text-zinc-400 mb-1">{isFr ? 'Point de départ' : 'Start Point'}</label>
                 <select
                   value={deadStartPointId}
                   onChange={e => setDeadStartPointId(e.target.value)}
-                  className="w-full bg-black border border-neutral-800 px-2 py-1 text-stone-200"
+                  className="w-full bg-[#161920] border border-[#3a4354] px-2 py-1 text-white"
                 >
                   {allWaypoints.map(wp => (
                     <option key={wp.id} value={wp.id}>{wp.name}</option>
@@ -1766,31 +1732,31 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                 </select>
               </div>
               <div>
-                <label className="block text-[10px] text-stone-400 mb-1">{isFr ? 'Cap suivi (°)' : 'Azimuth (°)'}</label>
+                <label className="block text-[10px] text-zinc-400 mb-1">{isFr ? 'Cap suivi (°)' : 'Azimuth (°)'}</label>
                 <input
                   type="number"
                   min="0"
                   max="359"
                   value={deadAzimuth}
                   onChange={e => setDeadAzimuth(Number(e.target.value) || 0)}
-                  className="w-full bg-black border border-neutral-800 px-2 py-1 text-amber-400"
+                  className="w-full bg-[#161920] border border-[#3a4354] px-2 py-1 text-amber-400"
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-stone-400 mb-1">{isFr ? 'Distance (m)' : 'Distance (m)'}</label>
+                <label className="block text-[10px] text-zinc-400 mb-1">{isFr ? 'Distance (m)' : 'Distance (m)'}</label>
                 <input
                   type="number"
                   min="10"
                   step="50"
                   value={deadDistanceMeters}
                   onChange={e => setDeadDistanceMeters(Number(e.target.value) || 0)}
-                  className="w-full bg-black border border-neutral-800 px-2 py-1 text-amber-400"
+                  className="w-full bg-[#161920] border border-[#3a4354] px-2 py-1 text-amber-400"
                 />
               </div>
               <div className="md:col-span-3">
                 <button
                   onClick={handleCalculateDeadReckoning}
-                  className="px-3 py-1.5 bg-amber-500 text-black font-bold rounded-sm"
+                  className="px-3 py-1.5 bg-amber-500 text-black font-bold rounded"
                 >
                   {isFr ? 'Projeter la position' : 'Project Position'}
                 </button>
@@ -1799,7 +1765,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
           )}
 
           {triangResult && (
-            <div className="p-2 bg-black border border-emerald-700 text-emerald-300 rounded-sm">
+            <div className="p-2 bg-[#161920] border border-amber-500 text-amber-300 rounded">
               {triangResult.note}
             </div>
           )}
@@ -1815,25 +1781,12 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
       {/* 2. CARTE PRINCIPALE & LISTE DES LIEUX */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start min-w-0">
         {/* Colonne Gauche : Carte (8 colonnes) */}
-        <div className="lg:col-span-8 space-y-2 min-w-0">
-          {/* Légende ultra-simple en 1 ligne */}
-          <div className="bg-black border border-neutral-800 rounded-lg px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-300">
-            <span><b className="text-sky-400">💧 Eau Potable :</b> Boire directement</span>
-            <span><b className="text-cyan-400">🌊 Lac / Plan d’eau :</b> Filtrer + bouillir 1 min</span>
-            <span><b className="text-teal-400">🚰 Source / Puits :</b> Faire bouillir</span>
-            <span><b className="text-rose-400">🏥 Hôpital / Clinique :</b> Soins</span>
-            <span><b className="text-emerald-400">🌲 Forêt :</b> Bois & Abri</span>
-            <span><b className="text-indigo-400">📡 TDF :</b> Radio</span>
-          </div>
-
-          {/* Conteneur Leaflet */}
+        <div className="lg:col-span-8 min-w-0">
           <div
-            className={`relative w-full h-[380px] sm:h-[520px] rounded-xl border border-neutral-800 overflow-hidden ${
+            className={`relative w-full h-[420px] sm:h-[540px] rounded-xl border border-[#3a4354] shadow-lg overflow-hidden ${
               mapTheme === 'organic'
                 ? 'map-theme-color bg-stone-200'
-                : mapTheme === 'red-night'
-                ? 'map-theme-night bg-black'
-                : 'map-theme-oled bg-black'
+                : 'map-theme-oled bg-[#161920]'
             }`}
           >
             <div ref={mapContainerRef} className="w-full h-full" />
@@ -1844,11 +1797,11 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
             </div>
 
             {isDirectPlacementActive && (
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[500] bg-sky-950 border border-sky-400 text-sky-200 rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-bold">
-                <span>🎯 {isFr ? 'Cliquez sur la carte pour fixer votre position' : 'Click map to set location'}</span>
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[500] bg-[#242a34] border border-amber-500 text-white rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-bold shadow-lg">
+                <span>🎯 {isFr ? 'Touchez la carte pour fixer votre position' : 'Tap map to set location'}</span>
                 <button
                   onClick={() => setIsDirectPlacementActive(false)}
-                  className="px-2 py-0.5 bg-black text-stone-300 rounded"
+                  className="px-2 py-0.5 bg-[#161920] text-zinc-300 rounded"
                 >
                   ✕
                 </button>
@@ -1856,13 +1809,13 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
             )}
 
             {clickedCoord && !isDirectPlacementActive && (
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[500] bg-black/95 border border-amber-500 rounded-lg p-2 flex flex-wrap items-center gap-2 text-xs max-w-[95%] shadow-xl">
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[500] bg-[#242a34]/95 border border-amber-500 rounded-lg p-2 flex flex-wrap items-center gap-2 text-xs max-w-[95%] shadow-xl">
                 <button
                   onClick={() => {
                     setUserLocationAndPersist(clickedCoord);
                     setClickedCoord(null);
                   }}
-                  className="px-2.5 py-1 bg-sky-600 text-white font-bold rounded text-xs cursor-pointer"
+                  className="px-2.5 py-1 bg-[#161920] border border-[#3a4354] text-white font-bold rounded text-xs cursor-pointer"
                 >
                   📍 {isFr ? 'Je suis ici' : 'I am here'}
                 </button>
@@ -1875,7 +1828,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                 >
                   + {isFr ? 'Enregistrer ce point' : 'Save this point'}
                 </button>
-                <button onClick={() => setClickedCoord(null)} className="text-stone-400 hover:text-white px-1.5">
+                <button onClick={() => setClickedCoord(null)} className="text-zinc-400 hover:text-white px-1.5">
                   ✕
                 </button>
               </div>
@@ -1885,13 +1838,13 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
             <div className="absolute right-3 bottom-3 flex flex-col gap-1.5 z-[500]">
               <button
                 onClick={() => mapInstanceRef.current?.zoomIn()}
-                className="w-9 h-9 rounded-lg bg-black/90 border border-neutral-700 text-white flex items-center justify-center shadow-md cursor-pointer"
+                className="w-9 h-9 rounded-lg bg-[#242a34]/95 border border-[#3a4354] text-white flex items-center justify-center shadow-md cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
               </button>
               <button
                 onClick={() => mapInstanceRef.current?.zoomOut()}
-                className="w-9 h-9 rounded-lg bg-black/90 border border-neutral-700 text-white flex items-center justify-center shadow-md cursor-pointer"
+                className="w-9 h-9 rounded-lg bg-[#242a34]/95 border border-[#3a4354] text-white flex items-center justify-center shadow-md cursor-pointer"
               >
                 <Minus className="w-4 h-4" />
               </button>
@@ -1905,35 +1858,35 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
           {isAddingPoint && (
             <form
               onSubmit={handleAddWaypoint}
-              className="border-2 border-amber-500 rounded-xl bg-neutral-950 p-4 space-y-3 text-xs"
+              className="border-2 border-amber-500 rounded-xl bg-[#242a34] p-4 space-y-3 text-xs shadow-lg"
             >
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
+              <div className="flex items-center justify-between border-b border-[#343c4b] pb-2">
                 <span className="font-extrabold text-amber-400 uppercase">
                   + {isFr ? 'Ajouter un Lieu Personnel' : 'Add Personal Point'}
                 </span>
-                <button type="button" onClick={() => setIsAddingPoint(false)} className="text-stone-400 hover:text-white">
+                <button type="button" onClick={() => setIsAddingPoint(false)} className="text-zinc-400 hover:text-white">
                   ✕
                 </button>
               </div>
 
               <div>
-                <label className="block text-xs text-stone-300 mb-1 font-bold">{isFr ? 'Nom du lieu :' : 'Name:'}</label>
+                <label className="block text-xs text-zinc-300 mb-1 font-bold">{isFr ? 'Nom du lieu :' : 'Name:'}</label>
                 <input
                   type="text"
                   required
                   value={newPointName}
                   onChange={e => setNewPointName(e.target.value)}
                   placeholder={isFr ? 'Ex: Fontaine, Maison, Abri...' : 'e.g. Spring, Home...'}
-                  className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500"
+                  className="w-full bg-[#161920] border border-[#3a4354] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs text-stone-300 mb-1 font-bold">{isFr ? 'Catégorie :' : 'Type:'}</label>
+                <label className="block text-xs text-zinc-300 mb-1 font-bold">{isFr ? 'Catégorie :' : 'Type:'}</label>
                 <select
                   value={newPointType}
                   onChange={e => setNewPointType(e.target.value as Waypoint['type'])}
-                  className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-stone-200"
+                  className="w-full bg-[#161920] border border-[#3a4354] rounded-lg px-3 py-2 text-zinc-200"
                 >
                   <option value="water">{isFr ? '💧 Eau Potable' : '💧 Potable Water'}</option>
                   <option value="water-raw">{isFr ? '🚰 Eau à filtrer / bouillir' : '🚰 Raw Water'}</option>
@@ -1946,13 +1899,13 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
               </div>
 
               <div>
-                <label className="block text-xs text-stone-300 mb-1 font-bold">{isFr ? 'Note utile (facultatif) :' : 'Notes:'}</label>
+                <label className="block text-xs text-zinc-300 mb-1 font-bold">{isFr ? 'Note utile (facultatif) :' : 'Notes:'}</label>
                 <input
                   type="text"
                   value={newPointNotes}
                   onChange={e => setNewPointNotes(e.target.value)}
                   placeholder={isFr ? 'Précisions...' : 'Details...'}
-                  className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-white"
+                  className="w-full bg-[#161920] border border-[#3a4354] rounded-lg px-3 py-2 text-white"
                 />
               </div>
 
@@ -1965,9 +1918,9 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
             </form>
           )}
 
-          {/* FICHE DU LIEU SÉLECTIONNÉ (Apparaît dès qu'on clique sur un point) */}
+          {/* FICHE DU LIEU SÉLECTIONNÉ */}
           {selectedWaypoint && !isAddingPoint && (
-            <div className="border-2 border-amber-500 rounded-xl bg-neutral-950 p-4 space-y-3 shadow-lg">
+            <div className="border-2 border-amber-500 rounded-xl bg-[#242a34] p-4 space-y-3 shadow-lg">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <span className="text-[11px] font-extrabold uppercase text-amber-400 block">
@@ -1991,7 +1944,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                 </div>
                 <button
                   onClick={() => setSelectedWaypoint(null)}
-                  className="px-2 py-1 rounded bg-neutral-900 text-stone-400 hover:text-white text-xs"
+                  className="px-2 py-1 rounded bg-[#161920] text-zinc-400 hover:text-white text-xs"
                 >
                   ✕
                 </button>
@@ -1999,19 +1952,19 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
 
               {navInfo && (
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="p-2.5 bg-black border border-neutral-800 rounded-lg text-center">
-                    <span className="text-[10px] text-stone-400 uppercase block">
+                  <div className="p-2.5 bg-[#161920] border border-[#343c4b] rounded-lg text-center">
+                    <span className="text-[10px] text-zinc-400 uppercase block">
                       {isFr ? 'Distance' : 'Distance'}
                     </span>
-                    <span className="text-base font-extrabold text-emerald-400">
+                    <span className="text-base font-extrabold text-white">
                       {navInfo.distanceMeters >= 1000
                         ? `${navInfo.distanceKm.toFixed(1)} km`
                         : `${navInfo.distanceMeters} m`}
                     </span>
                   </div>
-                  <div className="p-2.5 bg-black border border-neutral-800 rounded-lg text-center">
-                    <span className="text-[10px] text-stone-400 uppercase block">
-                      {isFr ? 'Direction Boussole' : 'Direction'}
+                  <div className="p-2.5 bg-[#161920] border border-[#343c4b] rounded-lg text-center">
+                    <span className="text-[10px] text-zinc-400 uppercase block">
+                      {isFr ? 'Direction' : 'Direction'}
                     </span>
                     <span className="text-base font-extrabold text-amber-400">
                       {getCompassRose(navInfo.bearing)} ({navInfo.bearing}°)
@@ -2021,12 +1974,12 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
               )}
 
               {selectedWaypoint.notes && (
-                <p className="text-xs text-stone-200 bg-black p-3 rounded-lg border border-neutral-800 leading-relaxed">
+                <p className="text-xs text-zinc-200 bg-[#161920] p-3 rounded-lg border border-[#343c4b] leading-relaxed">
                   {selectedWaypoint.notes}
                 </p>
               )}
 
-              <div className="flex items-center justify-between text-[11px] text-stone-400 pt-1">
+              <div className="flex items-center justify-between text-[11px] text-zinc-400 pt-1">
                 <span>GPS : {selectedWaypoint.lat.toFixed(4)}°N, {selectedWaypoint.lon.toFixed(4)}°E</span>
                 {selectedWaypoint.isUserAdded && (
                   <button
@@ -2042,10 +1995,10 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
           )}
 
           {/* LISTE DES LIEUX AVEC RECHERCHE IMMÉDIATE */}
-          <div className="border border-neutral-800 rounded-xl bg-neutral-950 p-3.5 space-y-3">
+          <div className="border border-[#3a4354] rounded-xl bg-[#242a34] p-3.5 space-y-3 shadow-md">
             <div className="flex items-center justify-between">
               <span className="text-xs font-extrabold text-white uppercase">
-                {isFr ? `Lieux trouvés (${visibleWaypoints.length})` : `Places found (${visibleWaypoints.length})`}
+                {isFr ? `Lieux (${visibleWaypoints.length})` : `Places (${visibleWaypoints.length})`}
               </span>
               <span className="text-[11px] text-amber-400 font-bold truncate max-w-[180px]">
                 {FRENCH_REGIONS.find(r => r.id === selectedRegionId)?.nameFr || 'France'}
@@ -2053,17 +2006,17 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
             </div>
 
             <div className="relative">
-              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
+              <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder={isFr ? 'Chercher une ville, un lac, une clinique...' : 'Search town, lake, clinic...'}
-                className="w-full bg-black border border-neutral-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                className="w-full bg-[#161920] border border-[#3a4354] rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
               />
             </div>
 
-            <div className="max-h-[380px] overflow-y-auto space-y-1.5 pr-1 text-xs">
+            <div className="max-h-[360px] overflow-y-auto space-y-1.5 pr-1 text-xs">
               {visibleWaypoints.map(wp => {
                 const nav = userLocation
                   ? calculateNav(userLocation.lat, userLocation.lon, wp.lat, wp.lon)
@@ -2077,8 +2030,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                     }}
                     className={`p-2.5 rounded-lg border flex items-center justify-between gap-2 cursor-pointer transition-colors ${
                       selectedWaypoint?.id === wp.id
-                        ? 'bg-neutral-900 border-amber-500 text-white'
-                        : 'bg-black border-neutral-800/90 text-stone-200 hover:border-neutral-600'
+                        ? 'bg-[#161920] border-amber-500 text-white'
+                        : 'bg-[#161920]/80 border-[#343c4b] text-zinc-200 hover:border-amber-500/60'
                     }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0 flex-1">
@@ -2113,7 +2066,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
               })}
 
               {visibleWaypoints.length === 0 && (
-                <div className="p-4 text-center text-stone-400 text-xs">
+                <div className="p-4 text-center text-zinc-400 text-xs">
                   {isFr ? 'Aucun lieu trouvé pour cette recherche.' : 'No places found.'}
                 </div>
               )}
@@ -2124,8 +2077,8 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
 
       {/* Toast Notification */}
       {pointToast && (
-        <div className="fixed bottom-5 right-5 z-[9999] bg-neutral-950 border border-emerald-500 text-emerald-300 px-3.5 py-2 rounded-lg shadow-xl text-xs font-bold flex items-center gap-2">
-          <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+        <div className="fixed bottom-5 right-5 z-[9999] bg-[#242a34] border border-amber-500 text-amber-300 px-3.5 py-2 rounded-lg shadow-xl text-xs font-bold flex items-center gap-2">
+          <CheckCircle className="w-4 h-4 text-amber-400 shrink-0" />
           <span>{pointToast}</span>
         </div>
       )}

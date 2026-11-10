@@ -1,18 +1,12 @@
 import React from 'react';
 import { Language } from '../types/sentinel';
-import { 
-  Shield, 
-  Terminal, 
-  BatteryCharging, 
-  Cpu, 
-  HardDrive, 
-  CheckCircle2, 
-  Lock, 
-  EyeOff, 
+import {
+  Shield,
+  BatteryCharging,
+  HardDrive,
+  EyeOff,
   AlertTriangle,
-  Award,
-  Zap,
-  Radio
+  Award
 } from 'lucide-react';
 
 interface AboutSentinelProps {
@@ -23,117 +17,113 @@ export const AboutSentinel: React.FC<AboutSentinelProps> = ({ language }) => {
   const isFr = language === 'fr';
 
   return (
-    <div className="space-y-8 animate-in fade-in">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* Hero Presentation Card */}
-      <div className="bg-[#221e16] border border-amber-800/40 rounded-md p-6 sm:p-10 overflow-hidden relative">
+      <div className="bg-[#242a34] border border-[#3a4354] rounded-2xl p-6 sm:p-8 shadow-lg">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
           {/* Left Column: Sentinel Photo & Official Shield Logo */}
           <div className="lg:col-span-5 flex flex-col items-center text-center space-y-4">
-            <div className="relative group">
-              {/* Photo du Sentinelle */}
-              <div className="w-56 h-56 sm:w-64 sm:h-64 rounded-2xl overflow-hidden border-2 border-amber-500/50 shadow-2xl shadow-amber-950/40 relative bg-slate-900">
-                <img 
-                  src="/assets/aistudio/Gemini_Generated_Image_rj42pxrj42pxrj42__1__6782cdbc.png" 
-                  alt="Opérateur Sentinelle" 
-                  className="w-full h-full object-cover object-top hover:scale-105 transition-transform duration-500"
+            <div className="relative">
+              <div className="w-56 h-56 sm:w-64 sm:h-64 rounded-2xl overflow-hidden border-2 border-amber-500/60 shadow-xl relative bg-[#161920]">
+                <img
+                  src="./assets/aistudio/Gemini_Generated_Image_rj42pxrj42pxrj42__1__6782cdbc.png"
+                  alt="Opérateur Sentinelle"
+                  className="w-full h-full object-cover object-top"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-transparent to-transparent"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                 <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-[11px] font-mono">
-                  <span className="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-bold">
+                  <span className="px-2 py-0.5 rounded bg-amber-500 text-black font-bold">
                     SENTINELLE #01
                   </span>
-                  <span className="text-emerald-400 flex items-center gap-1 bg-slate-950/80 px-2 py-0.5 rounded border border-slate-700">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span className="text-amber-300 flex items-center gap-1 bg-[#161920]/90 px-2 py-0.5 rounded border border-[#3a4354]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                     OPÉRATIONNEL
                   </span>
                 </div>
               </div>
 
-              {/* Official SU Shield Logo Floating Badge */}
-              <div className="absolute -top-3 -right-3 w-14 h-14 rounded-xl bg-slate-950 border-2 border-amber-500/70 p-1 shadow-xl flex items-center justify-center">
-                <img 
-                  src="/assets/aistudio/noir_233aab2b.png" 
-                  alt="Logo SU" 
+              <div className="absolute -top-3 -right-3 w-14 h-14 rounded-xl bg-[#161920] border-2 border-amber-500/80 p-1.5 shadow-xl flex items-center justify-center">
+                <img
+                  src="./assets/aistudio/noir_233aab2b.png"
+                  alt="Logo Sentinel"
                   className="w-full h-full object-contain invert"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <h3 className="text-lg font-bold text-white tracking-wide font-mono">
-                {isFr ? 'L’OPÉRATEUR SENTINELLE' : 'THE SENTINEL OPERATOR'}
+              <h3 className="text-lg font-bold text-white tracking-wide">
+                {isFr ? 'LE QG DU SENTINEL' : 'THE SENTINEL HQ'}
               </h3>
-              <p className="text-xs text-amber-400 font-mono">
-                {isFr ? 'Autonomie · Résilience Numérique · Survie Air-Gap' : 'Autonomous · Digital Resilience · Air-Gap Ready'}
+              <p className="text-xs text-amber-400 font-semibold uppercase tracking-wider">
+                {isFr ? 'Le Quartier Général Autonome Hors-Ligne' : 'Autonomous Offline Headquarters'}
               </p>
             </div>
           </div>
 
           {/* Right Column: Mission Briefing */}
           <div className="lg:col-span-7 space-y-4">
-            <div className="flex items-center gap-2 text-xs font-mono text-amber-500 uppercase tracking-wider">
+            <div className="flex items-center gap-2 text-xs font-bold text-amber-400 uppercase tracking-wider">
               <Award className="w-4 h-4" />
               <span>{isFr ? 'Mission & Philosophie' : 'Mission & Philosophy'}</span>
             </div>
 
             <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-              {isFr 
-                ? 'La Simplicité comme Arme de Survie' 
-                : 'Simplicity as a Survival Weapon'}
+              {isFr ? 'La Simplicité comme Arme de Survie' : 'Simplicity as a Survival Weapon'}
             </h2>
 
-            <p className="text-sm text-slate-300 leading-relaxed">
+            <p className="text-sm text-zinc-300 leading-relaxed">
               {isFr
-                ? 'Sentinel Pack Survie a été conçu selon un impératif fondamental : aucun superflu, une clarté absolue, et des packs 100% prêts à être déployés. En situation de crise, de blackout électrique ou de rupture des télécommunications, la complexité est un point de défaillance.'
-                : 'Sentinel Survival Pack was engineered around a core doctrine: zero fluff, absolute clarity, and packs 100% ready to deploy. During blackouts, crisis, or telecom collapse, complexity is a point of failure.'}
+                ? 'Le QG du Sentinel a été conçu selon un impératif fondamental : aucun superflu, une clarté immédiate et des outils 100% prêts sans connexion Internet. En cas de coupure électrique ou de rupture des réseaux, tout reste accessible sur votre téléphone ou votre ordinateur.'
+                : 'The Sentinel HQ was engineered around a core principle: zero fluff, immediate clarity, and tools 100% ready without Internet.'}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-              <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
-                <div className="flex items-center gap-2 text-amber-400 text-xs font-mono font-bold">
+              <div className="p-3.5 bg-[#161920] border border-[#3a4354] rounded-xl space-y-1">
+                <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
                   <EyeOff className="w-4 h-4" />
-                  <span>{isFr ? 'Zéro Télémétrie' : 'Zero Telemetry'}</span>
+                  <span>{isFr ? 'Zéro Pistage' : 'Zero Telemetry'}</span>
                 </div>
-                <p className="text-xs text-slate-400">
-                  {isFr 
-                    ? 'Aucun cookie, aucun mouchard, aucun appel vers des serveurs distants. Conforme au principe de l’air-gap étanche.' 
-                    : 'Zero tracking, zero analytics, zero external network requests. Complete air-gap conformity.'}
+                <p className="text-xs text-zinc-400">
+                  {isFr
+                    ? 'Aucun cookie, aucun compte requis, aucune donnée envoyée sur Internet.'
+                    : 'Zero tracking, zero account required, zero external network requests.'}
                 </p>
               </div>
 
-              <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
-                <div className="flex items-center gap-2 text-emerald-400 text-xs font-mono font-bold">
+              <div className="p-3.5 bg-[#161920] border border-[#3a4354] rounded-xl space-y-1">
+                <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
                   <BatteryCharging className="w-4 h-4" />
-                  <span>{isFr ? 'Basse Consommation' : 'Ultra-Low Power'}</span>
+                  <span>{isFr ? 'Économie de Batterie' : 'Low Power'}</span>
                 </div>
-                <p className="text-xs text-slate-400">
-                  {isFr 
-                    ? 'Mode OLED noir absolu désactivant les pixels écran. Optimisé pour tourner sur batterie 12V, solaire ou mini-PC.' 
-                    : 'Pure black OLED power mode shuts off screen pixels. Tailored for 12V battery, solar, or SBC operation.'}
+                <p className="text-xs text-zinc-400">
+                  {isFr
+                    ? 'Interface sombre reposante optimisée pour économiser la batterie de votre téléphone.'
+                    : 'Dark slate interface optimized to preserve phone and laptop battery.'}
                 </p>
               </div>
 
-              <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
-                <div className="flex items-center gap-2 text-amber-400 text-xs font-mono font-bold">
+              <div className="p-3.5 bg-[#161920] border border-[#3a4354] rounded-xl space-y-1">
+                <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
                   <HardDrive className="w-4 h-4" />
-                  <span>{isFr ? '100% Local-First' : '100% Local-First'}</span>
+                  <span>{isFr ? '100% sur Votre Appareil' : '100% On-Device'}</span>
                 </div>
-                <p className="text-xs text-slate-400">
-                  {isFr 
-                    ? 'Vos fiches, repères GPS, conversations d’urgence et documents sont stockés directement sur votre matériel.' 
-                    : 'Your waypoints, triage notes, emergency chat, and maps remain strictly stored on your device.'}
+                <p className="text-xs text-zinc-400">
+                  {isFr
+                    ? 'Vos stocks, votre fiche famille et vos repères sur la carte restent enregistrés dans votre appareil.'
+                    : 'Your stocks, family profile, and map points stay stored on your device.'}
                 </p>
               </div>
 
-              <div className="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-1">
-                <div className="flex items-center gap-2 text-amber-400 text-xs font-mono font-bold">
+              <div className="p-3.5 bg-[#161920] border border-[#3a4354] rounded-xl space-y-1">
+                <div className="flex items-center gap-2 text-amber-400 text-xs font-bold">
                   <Shield className="w-4 h-4" />
-                  <span>{isFr ? 'Documentation Intégrée' : 'Built-in Documentation'}</span>
+                  <span>{isFr ? 'Documentation Complète' : 'Complete Documentation'}</span>
                 </div>
-                <p className="text-xs text-slate-400">
-                  {isFr 
-                    ? 'Bibliothèque de 16 manuels de survie mis en page + 23 archives PDF/ZIM prêts à lire ou télécharger.' 
-                    : 'Library of 16 formatted survival manuals + 23 PDF/ZIM archives ready to read or download.'}
+                <p className="text-xs text-zinc-400">
+                  {isFr
+                    ? '8 fiches de premiers secours, 16 guides pratiques, médicaments et carte de France intégrés.'
+                    : '8 first aid sheets, 16 practical guides, medications, and France map built-in.'}
                 </p>
               </div>
             </div>
@@ -141,38 +131,33 @@ export const AboutSentinel: React.FC<AboutSentinelProps> = ({ language }) => {
         </div>
       </div>
 
-      {/* Disclaimers & Responsibilities (Medical & Security) */}
-      <div className="border border-slate-800 rounded-xl bg-slate-900/40 p-6 space-y-3 font-mono text-xs">
+      {/* Disclaimers & Responsibilities */}
+      <div className="border border-[#3a4354] rounded-2xl bg-[#242a34] p-5 space-y-2 text-xs shadow-md">
         <div className="flex items-center gap-2 text-amber-400 font-bold uppercase">
           <AlertTriangle className="w-4 h-4" />
-          <span>{isFr ? 'Avertissement Médical et Décharge de Responsabilité' : 'Medical & Emergency Disclaimer'}</span>
+          <span>{isFr ? 'Avertissement Médical' : 'Medical Disclaimer'}</span>
         </div>
-        <p className="text-slate-400 leading-relaxed">
+        <p className="text-zinc-300 leading-relaxed">
           {isFr
-            ? 'Les données incluses (guides de secourisme TCCC, médecine d’urgence de montagne, traitement de l’eau et cartographie) sont fournies à titre strictement indicatif pour la préparation à la résilience et l’auto-formation. Elles ne se substituent en aucun cas à un diagnostic médical professionnel ou aux secours institutionnels lorsque ceux-ci sont joignables.'
-            : 'Information provided (TCCC trauma guides, wilderness medicine, water purification, and mapping) is intended solely for resilience preparedness and self-education. It is not a substitute for professional medical care or emergency services when reachable.'}
+            ? 'Les informations de secourisme, de traitement de l’eau et de médicaments sont fournies pour la préparation et les situations d’isolement. Lorsque les secours (15 / 18 / 112) sont joignables, appelez-les toujours en priorité.'
+            : 'First aid, water treatment, and medication guides are provided for preparedness and isolated emergencies. Always call emergency services (112 / 911) first when reachable.'}
         </p>
       </div>
 
-      {/* Mandatory Attribution Footer Card */}
-      <div className="border-2 border-amber-500/30 rounded-xl bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 p-6 text-center space-y-2">
-        <div className="w-12 h-12 mx-auto rounded-xl bg-amber-500/10 border border-amber-500/40 p-1 flex items-center justify-center">
-          <img 
-            src="/assets/aistudio/noir_233aab2b.png" 
-            alt="Logo Sentinel" 
+      {/* Attribution Footer Card */}
+      <div className="border border-[#3a4354] rounded-2xl bg-[#242a34] p-6 text-center space-y-2 shadow-md">
+        <div className="w-12 h-12 mx-auto rounded-xl bg-[#161920] border border-amber-500/50 p-1.5 flex items-center justify-center">
+          <img
+            src="./assets/aistudio/noir_233aab2b.png"
+            alt="Logo Sentinel"
             className="w-full h-full object-contain invert"
           />
         </div>
-        <h4 className="text-base font-bold text-white font-mono tracking-wider">
-          SENTINEL PACK SURVIE
+        <h4 className="text-base font-bold text-white tracking-wider">
+          LE QG DU SENTINEL
         </h4>
-        <p className="text-xs text-slate-400 max-w-xl mx-auto font-sans">
-          {isFr
-            ? 'Architecture numérique de résilience autonome conçue pour traverser les crises sans dépendance extérieure.'
-            : 'Autonomous digital resilience system engineered to withstand crises without external reliance.'}
-        </p>
-        <div className="pt-2">
-          <span className="inline-block px-4 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/40 text-amber-400 font-mono font-bold text-xs">
+        <div className="pt-1">
+          <span className="inline-block px-4 py-1.5 rounded-full bg-[#161920] border border-[#3a4354] text-amber-400 font-bold text-xs">
             {isFr ? 'Créé par LORN Digital Studio.' : 'Created by LORN Digital Studio.'}
           </span>
         </div>
