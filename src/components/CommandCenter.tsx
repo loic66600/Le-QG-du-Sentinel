@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Language, NavTab } from '../types/sentinel';
 import {
   ArrowRight,
@@ -7,9 +7,10 @@ import {
   Settings,
   Package,
   HeartPulse,
-  MessageSquare,
+  Sparkles,
   Smartphone,
-  ShieldAlert
+  ShieldAlert,
+  Send
 } from 'lucide-react';
 
 interface CommandCenterProps {
@@ -23,12 +24,23 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   onNavigate
 }) => {
   const isFr = language === 'fr';
+  const [quickAiPrompt, setQuickAiPrompt] = useState('');
 
   const handleOpenUrgencyDirect = (urgencyId: string) => {
     try {
       sessionStorage.setItem('sentinel_open_urgency_id', urgencyId);
     } catch {}
     onNavigate('emergency-docs');
+  };
+
+  const handleAskAiFromHome = (promptText?: string) => {
+    const q = (promptText ?? quickAiPrompt).trim();
+    if (q) {
+      try {
+        sessionStorage.setItem('sentinel_initial_ai_prompt', q);
+      } catch {}
+    }
+    onNavigate('survival-llm');
   };
 
   const quickEmergencies = [
@@ -51,6 +63,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
     metaFr: string;
     metaEn: string;
     icon: React.ReactNode;
+    isAi?: boolean;
   }[] = [
     {
       id: 'tactical-map',
@@ -84,18 +97,19 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
     },
     {
       id: 'survival-llm',
-      titleFr: '4. Poser une Question (Hors-Ligne)',
-      titleEn: '4. Ask a Question (Offline)',
-      descFr: 'Écrivez votre problème avec vos mots : l’assistant vous donne la marche à suivre sans Internet.',
-      descEn: 'Type your problem in plain words and get immediate offline guidance.',
-      metaFr: 'Réponse immédiate · 100% autonome',
-      metaEn: 'Immediate answer · 100% autonomous',
-      icon: <MessageSquare className="w-5 h-5" />
+      titleFr: '4. Questionner l’IA (Intelligence Artificielle)',
+      titleEn: '4. Ask the AI (Artificial Intelligence)',
+      descFr: 'Posez n’importe quelle question à l’Intelligence Artificielle embarquée : elle vous répond immédiatement sans Internet.',
+      descEn: 'Ask any question to the built-in offline Artificial Intelligence for immediate guidance.',
+      metaFr: '✨ IA Embarquée · 100% Hors-Ligne',
+      metaEn: '✨ Built-in AI · 100% Offline',
+      icon: <Sparkles className="w-5 h-5" />,
+      isAi: true
     }
   ];
 
   return (
-    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 min-w-0">
+    <div className="max-w-6xl mx-auto space-y-4 sm:space-y-5 min-w-0">
       {/* 1. EN-TÊTE SOBRE ET CLAIR */}
       <div className="border border-[#3a4354] bg-[#242a34] rounded-2xl p-4 sm:p-6 shadow-lg shadow-black/30 relative overflow-hidden">
         <div className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-amber-500" />
@@ -133,16 +147,101 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         </div>
       </div>
 
+      {/* 1B. MISE EN VALEUR DE L'INTELLIGENCE ARTIFICIELLE : QUESTIONNER L'IA DIRECTEMENT */}
+      <div className="border-2 border-amber-500/80 bg-[#242a34] rounded-2xl p-4 sm:p-5 shadow-lg shadow-black/30 space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-black flex items-center justify-center shrink-0">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-sm sm:text-base font-black text-white uppercase tracking-wide">
+                  {isFr ? 'Questionner l’IA — Intelligence Artificielle de Survie' : 'Ask the AI — Offline Survival Intelligence'}
+                </h2>
+                <span className="hidden sm:inline-block px-2 py-0.5 rounded bg-[#161920] border border-amber-500/60 text-amber-300 text-[10px] font-bold">
+                  100% HORS-LIGNE
+                </span>
+              </div>
+              <p className="text-xs text-zinc-300">
+                {isFr
+                  ? 'Décrivez votre urgence ou posez une question : l’IA vous guide étape par étape sans connexion Internet.'
+                  : 'Describe your emergency or ask a question: the AI guides you step-by-step without Internet.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            handleAskAiFromHome();
+          }}
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
+        >
+          <input
+            type="text"
+            value={quickAiPrompt}
+            onChange={e => setQuickAiPrompt(e.target.value)}
+            placeholder={
+              isFr
+                ? 'Posez votre question à l’IA (ex : comment purifier l’eau d’un lac, stopper un saignement, hypothermie)...'
+                : 'Ask the AI (e.g. how to purify lake water, stop bleeding, hypothermia)...'
+            }
+            className="flex-1 bg-[#161920] border border-[#3a4354] focus:border-amber-500 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-zinc-400 focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-black font-black rounded-xl text-xs sm:text-sm flex items-center justify-center gap-2 cursor-pointer shrink-0 shadow-md"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>{isFr ? 'Questionner l’IA' : 'Ask the AI'}</span>
+            <Send className="w-3.5 h-3.5" />
+          </button>
+        </form>
+
+        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+          <span className="text-[11px] text-zinc-400 mr-1">
+            {isFr ? 'Exemples 1-clic :' : 'Quick examples:'}
+          </span>
+          {[
+            { label: '💧 Rendre de l’eau potable', q: 'Comment purifier et faire bouillir de l’eau douteuse ?' },
+            { label: '🩸 Arrêter un saignement', q: 'Comment stopper une hémorragie grave et poser un garrot ?' },
+            { label: '❄️ Hypothermie / Froid', q: 'Que faire immédiatement en cas d’hypothermie ?' },
+            { label: '📻 Appeler les secours radio', q: 'Quelles sont les fréquences radio de secours et le message MAYDAY ?' }
+          ].map((ex, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={() => handleAskAiFromHome(ex.q)}
+              className="px-2.5 py-1 rounded-lg bg-[#161920] hover:bg-[#1d222b] border border-[#3a4354] hover:border-amber-500 text-zinc-200 text-[11px] font-semibold cursor-pointer"
+            >
+              {ex.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* 2. LES 4 GRANDES CARTES PRINCIPALES (SOBRES, BIEN DÉTACHÉES DU FOND) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
         {mainModules.map(mod => (
           <button
             key={mod.id}
             onClick={() => onNavigate(mod.id)}
-            className="group text-left border border-[#3a4354] hover:border-amber-500 bg-[#242a34] hover:bg-[#2a313d] rounded-2xl p-4 sm:p-6 flex flex-col justify-between gap-4 cursor-pointer transition-all shadow-lg shadow-black/25"
+            className={`group text-left border bg-[#242a34] hover:bg-[#2a313d] rounded-2xl p-4 sm:p-6 flex flex-col justify-between gap-4 cursor-pointer transition-all shadow-lg shadow-black/25 ${
+              mod.isAi
+                ? 'border-amber-500/70 hover:border-amber-400'
+                : 'border-[#3a4354] hover:border-amber-500'
+            }`}
           >
             <div className="flex items-start gap-3.5 sm:gap-4">
-              <div className="w-11 h-11 rounded-xl bg-[#161920] border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+              <div
+                className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${
+                  mod.isAi
+                    ? 'bg-amber-500 text-black'
+                    : 'bg-[#161920] border border-amber-500/40 text-amber-400'
+                }`}
+              >
                 {mod.icon}
               </div>
               <div className="min-w-0">
@@ -157,7 +256,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             <div className="flex items-center justify-between pt-3 border-t border-[#343c4b] text-xs font-semibold text-amber-400">
               <span className="truncate pr-2">{isFr ? mod.metaFr : mod.metaEn}</span>
               <span className="flex items-center gap-1 shrink-0">
-                {isFr ? 'Ouvrir' : 'Open'} <ArrowRight className="w-4 h-4" />
+                {mod.isAi ? (isFr ? 'Questionner l’IA' : 'Ask the AI') : isFr ? 'Ouvrir' : 'Open'}{' '}
+                <ArrowRight className="w-4 h-4" />
               </span>
             </div>
           </button>

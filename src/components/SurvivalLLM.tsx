@@ -418,21 +418,32 @@ Regarding your inquiry: **"${prompt}"**
     setMessages([initialGreeting]);
   };
 
+  useEffect(() => {
+    try {
+      const pendingPrompt = sessionStorage.getItem('sentinel_initial_ai_prompt');
+      if (pendingPrompt) {
+        sessionStorage.removeItem('sentinel_initial_ai_prompt');
+        handleSendMessage(pendingPrompt);
+      }
+    } catch {}
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div className="max-w-5xl mx-auto space-y-5">
-      {/* En-tête épuré et rassurant */}
-      <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* En-tête mettant en valeur l'IA */}
+      <div className="bg-[#242a34] border-2 border-amber-500/80 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-            <h2 className="text-lg font-extrabold text-white">
-              {isFr ? '💬 Poser une Question (Assistant 100% Hors-Ligne)' : '💬 Ask a Question (100% Offline Assistant)'}
+            <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+            <h2 className="text-lg font-extrabold text-white uppercase tracking-wide">
+              {isFr ? '✨ Questionner l’IA — Intelligence Artificielle de Survie' : '✨ Ask the AI — Offline Survival Intelligence'}
             </h2>
           </div>
-          <p className="text-xs text-stone-400 mt-1">
+          <p className="text-xs text-zinc-300 mt-1">
             {isFr
-              ? 'Posez votre question avec vos propres mots ou cliquez sur une situation ci-dessous.'
-              : 'Ask your question in plain words or tap a situation below.'}
+              ? 'Intelligence Artificielle 100% hors-ligne : posez votre question avec vos propres mots ou cliquez sur un sujet ci-dessous.'
+              : '100% offline Artificial Intelligence: ask your question in plain words or tap a topic below.'}
           </p>
         </div>
 
@@ -441,8 +452,8 @@ Regarding your inquiry: **"${prompt}"**
             onClick={() => setUseFamilyMemory(!useFamilyMemory)}
             className={`px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer ${
               useFamilyMemory
-                ? 'bg-amber-950/70 border-amber-500 text-amber-300 font-bold'
-                : 'bg-black border-neutral-800 text-stone-400'
+                ? 'bg-amber-500 text-black border-amber-400 font-bold'
+                : 'bg-[#161920] border-[#3a4354] text-zinc-300'
             }`}
           >
             <span>👨‍👩‍👧 {isFr ? `Infos Famille : ${useFamilyMemory ? 'OUI' : 'NON'}` : `Family Info: ${useFamilyMemory ? 'ON' : 'OFF'}`}</span>
@@ -450,7 +461,7 @@ Regarding your inquiry: **"${prompt}"**
 
           <button
             onClick={handleClearHistory}
-            className="px-3 py-1.5 rounded-lg bg-black border border-neutral-800 text-stone-400 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#161920] border border-[#3a4354] text-zinc-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             <span>{isFr ? 'Effacer' : 'Reset'}</span>
@@ -464,16 +475,16 @@ Regarding your inquiry: **"${prompt}"**
           <button
             key={action.id}
             onClick={() => handleSendMessage(isFr ? action.queryFr : action.queryEn)}
-            className="text-left p-3 bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 hover:border-amber-500 rounded-xl transition-all group flex items-center gap-3 cursor-pointer"
+            className="text-left p-3 bg-[#242a34] hover:bg-[#2a313d] border border-[#3a4354] hover:border-amber-500 rounded-xl transition-all group flex items-center gap-3 cursor-pointer shadow-sm"
           >
-            <div className="p-2 rounded-lg bg-black border border-neutral-800 shrink-0">
+            <div className="p-2 rounded-lg bg-[#161920] border border-[#343c4b] shrink-0">
               {action.icon}
             </div>
             <div className="min-w-0">
               <div className="text-xs font-extrabold text-white group-hover:text-amber-400 truncate">
                 {isFr ? action.labelFr : action.labelEn}
               </div>
-              <div className="text-[11px] text-stone-400 truncate">
+              <div className="text-[11px] text-zinc-400 truncate">
                 {isFr ? action.queryFr : action.queryEn}
               </div>
             </div>
@@ -482,7 +493,7 @@ Regarding your inquiry: **"${prompt}"**
       </div>
 
       {/* Fenêtre de discussion */}
-      <div className="border border-neutral-800 rounded-xl bg-neutral-950 flex flex-col h-[500px] overflow-hidden">
+      <div className="border border-[#3a4354] rounded-2xl bg-[#242a34] flex flex-col h-[500px] overflow-hidden shadow-lg">
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           {messages.map((msg) => {
             const isUser = msg.role === 'user';
@@ -492,21 +503,21 @@ Regarding your inquiry: **"${prompt}"**
                 className={`flex gap-3 max-w-3xl ${isUser ? 'ml-auto flex-row-reverse' : ''}`}
               >
                 <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-extrabold ${
                     isUser
                       ? 'bg-amber-500 text-black'
-                      : 'bg-black border border-neutral-700 text-amber-400'
+                      : 'bg-[#161920] border border-amber-500/60 text-amber-400'
                   }`}
                 >
-                  {isUser ? (isFr ? 'Moi' : 'Me') : 'QG'}
+                  {isUser ? (isFr ? 'Moi' : 'Me') : 'IA'}
                 </div>
 
                 <div className="space-y-1 max-w-2xl">
                   <div
                     className={`rounded-xl p-4 text-xs sm:text-sm leading-relaxed ${
                       isUser
-                        ? 'bg-amber-500/15 border border-amber-500/40 text-white'
-                        : 'bg-black border border-neutral-800 text-stone-200'
+                        ? 'bg-amber-500/15 border border-amber-500/50 text-white'
+                        : 'bg-[#161920] border border-[#343c4b] text-zinc-100'
                     }`}
                   >
                     {msg.urgentAction && (
@@ -527,13 +538,13 @@ Regarding your inquiry: **"${prompt}"**
 
           {isGenerating && (
             <div className="flex gap-3 max-w-xl">
-              <div className="w-8 h-8 rounded-lg bg-black border border-neutral-700 flex items-center justify-center shrink-0 text-xs font-bold text-amber-400">
-                QG
+              <div className="w-8 h-8 rounded-lg bg-[#161920] border border-amber-500/60 flex items-center justify-center shrink-0 text-xs font-extrabold text-amber-400">
+                IA
               </div>
-              <div className="bg-black border border-neutral-800 rounded-xl p-4 flex items-center gap-3 text-xs text-stone-300">
+              <div className="bg-[#161920] border border-[#343c4b] rounded-xl p-4 flex items-center gap-3 text-xs text-zinc-300">
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
                 <span>
-                  {isFr ? 'Recherche de la marche à suivre...' : 'Looking up guidance...'}
+                  {isFr ? 'L’IA analyse votre situation hors-ligne...' : 'AI analyzing your situation offline...'}
                 </span>
               </div>
             </div>
@@ -543,7 +554,7 @@ Regarding your inquiry: **"${prompt}"**
         </div>
 
         {/* Barre de saisie */}
-        <div className="p-3 bg-black border-t border-neutral-800">
+        <div className="p-3 bg-[#161920] border-t border-[#343c4b]">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -557,17 +568,17 @@ Regarding your inquiry: **"${prompt}"**
               onChange={(e) => setInputPrompt(e.target.value)}
               placeholder={
                 isFr
-                  ? 'Écrivez votre question ici (ex : comment rendre l’eau potable, saignement, brûlure)...'
-                  : 'Type your question here (e.g. how to make water safe, bleeding, burn)...'
+                  ? 'Posez votre question à l’IA (ex : comment rendre l’eau potable, saignement, brûlure)...'
+                  : 'Ask the AI (e.g. how to make water safe, bleeding, burn)...'
               }
-              className="flex-1 bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
+              className="flex-1 bg-[#242a34] border border-[#3a4354] rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-amber-500"
             />
             <button
               type="submit"
               disabled={!inputPrompt.trim() || isGenerating}
-              className="px-5 py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-extrabold rounded-xl transition-colors flex items-center gap-2 text-xs cursor-pointer"
+              className="px-5 py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-extrabold rounded-xl transition-colors flex items-center gap-2 text-xs cursor-pointer shrink-0"
             >
-              <span>{isFr ? 'Demander' : 'Ask'}</span>
+              <span>{isFr ? 'Questionner l’IA' : 'Ask the AI'}</span>
               <Send className="w-3.5 h-3.5" />
             </button>
           </form>

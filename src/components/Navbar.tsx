@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { NavTab, Language } from '../types/sentinel';
 import { MobileInstallModal } from './MobileInstallModal';
 import {
-  MessageSquare,
+  Sparkles,
   Home,
   HeartPulse,
   MapPin,
@@ -58,7 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     setDeferredPrompt(null);
   };
 
-  const navItems: { id: NavTab; label: string; shortLabel: string; icon: React.ReactNode }[] = [
+  const navItems: { id: NavTab; label: string; shortLabel: string; icon: React.ReactNode; isAi?: boolean }[] = [
     {
       id: 'command-center',
       label: isFr ? 'Accueil' : 'Home',
@@ -78,16 +78,17 @@ export const Navbar: React.FC<NavbarProps> = ({
       icon: <HeartPulse className="w-4 h-4 shrink-0" />
     },
     {
+      id: 'survival-llm',
+      label: isFr ? 'Questionner l’IA' : 'Ask the AI',
+      shortLabel: isFr ? 'Questionner l’IA' : 'Ask AI',
+      icon: <Sparkles className="w-4 h-4 shrink-0" />,
+      isAi: true
+    },
+    {
       id: 'stocks',
       label: isFr ? 'Mes Stocks' : 'My Stocks',
       shortLabel: isFr ? 'Stocks' : 'Stocks',
       icon: <Package className="w-4 h-4 shrink-0" />
-    },
-    {
-      id: 'survival-llm',
-      label: isFr ? 'Questions' : 'Ask AI',
-      shortLabel: isFr ? 'Questions' : 'Ask AI',
-      icon: <MessageSquare className="w-4 h-4 shrink-0" />
     },
     {
       id: 'blackout',
@@ -155,6 +156,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className={`flex items-center gap-2 px-3.5 py-2 text-xs font-bold rounded-lg whitespace-nowrap cursor-pointer transition-colors ${
                     isActive
                       ? 'bg-amber-500 text-black shadow-sm'
+                      : item.isAi
+                      ? 'bg-[#242a34] text-amber-300 border border-amber-500/70 hover:bg-amber-500 hover:text-black'
                       : 'text-zinc-300 hover:text-white hover:bg-[#242a34]'
                   }`}
                 >
