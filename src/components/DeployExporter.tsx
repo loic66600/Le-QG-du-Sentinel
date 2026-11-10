@@ -166,6 +166,11 @@ export const DeployExporter: React.FC<DeployExporterProps> = ({ language }) => {
 
   useEffect(() => {
     try {
+      const targetSection = sessionStorage.getItem('sentinel_open_docs_section');
+      if (targetSection) {
+        setMainSection(targetSection as any);
+        sessionStorage.removeItem('sentinel_open_docs_section');
+      }
       const targetUrgency = sessionStorage.getItem('sentinel_open_urgency_id');
       if (targetUrgency) {
         setMainSection('first-aid');
@@ -705,6 +710,18 @@ export const DeployExporter: React.FC<DeployExporterProps> = ({ language }) => {
             >
               <BookOpen className="w-3.5 h-3.5" />
               <span>{isFr ? '📖 16 Guides Pratiques' : '📖 16 Guides'}</span>
+            </button>
+
+            <button
+              onClick={() => setMainSection('external-catalog')}
+              className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
+                mainSection === 'external-catalog'
+                  ? 'bg-amber-500 text-black'
+                  : 'bg-neutral-900 text-amber-300 hover:text-white border border-amber-500/60'
+              }`}
+            >
+              <FolderDown className="w-3.5 h-3.5" />
+              <span>{isFr ? '📚 Wikis & PDF Téléchargeables (23)' : '📚 Downloadable Wikis & PDFs (23)'}</span>
             </button>
 
             <button
@@ -1325,6 +1342,41 @@ export const DeployExporter: React.FC<DeployExporterProps> = ({ language }) => {
          ========================================================================== */}
       {mainSection === 'external-catalog' && (
         <div className="space-y-6">
+          {/* Bandeau 1-Clic : Télécharger l'Encyclopédie Incorporée sur Téléphone / PC */}
+          <div className="bg-[#242a34] border-2 border-amber-500/80 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-lg">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <FolderDown className="w-5 h-5 text-amber-400 shrink-0" />
+                <h2 className="text-sm sm:text-base font-extrabold text-white uppercase">
+                  {isFr
+                    ? '📲 Encyclopédie & Wikis Incorporés (Téléphone & PC)'
+                    : '📲 Built-in Encyclopedia & Downloadable Wikis (Mobile & PC)'}
+                </h2>
+              </div>
+              <p className="text-xs text-zinc-300">
+                {isFr
+                  ? 'Les 16 manuels complets sont déjà incorporés dans le site et dans l’IA. Vous pouvez aussi les télécharger en 1 fichier unique sur votre téléphone ou télécharger les grandes archives Kiwix (.ZIM / PDF) ci-dessous.'
+                  : 'All 16 manuals are already built into the app and the AI. You can also download them as a single offline file or download the full Kiwix (.ZIM / PDF) archives below.'}
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              <button
+                onClick={handleDownloadAllPacks}
+                className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs rounded-xl flex items-center gap-2 cursor-pointer shadow-md"
+              >
+                <Download className="w-4 h-4" />
+                <span>{isFr ? 'Télécharger les 16 Guides en 1 Fichier (.HTML)' : 'Download All 16 Guides (.HTML)'}</span>
+              </button>
+              <button
+                onClick={() => setMainSection('local-manuals')}
+                className="px-3.5 py-2.5 bg-[#161920] hover:bg-[#1e232d] border border-[#3a4354] text-zinc-100 font-bold text-xs rounded-xl flex items-center gap-1.5 cursor-pointer"
+              >
+                <BookOpen className="w-3.5 h-3.5 text-amber-400" />
+                <span>{isFr ? 'Lire les 16 Guides intégrés' : 'Read 16 Built-in Guides'}</span>
+              </button>
+            </div>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
             {[
               { id: 'all', labelFr: 'Toutes les Archives (23)', labelEn: 'All Archives (23)' },

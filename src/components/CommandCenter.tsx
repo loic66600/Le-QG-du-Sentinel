@@ -33,6 +33,13 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
     onNavigate('emergency-docs');
   };
 
+  const handleOpenDocsSection = (section: string) => {
+    try {
+      sessionStorage.setItem('sentinel_open_docs_section', section);
+    } catch {}
+    onNavigate('emergency-docs');
+  };
+
   const handleAskAiFromHome = (promptText?: string) => {
     const q = (promptText ?? quickAiPrompt).trim();
     if (q) {
@@ -77,12 +84,12 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
     },
     {
       id: 'emergency-docs',
-      titleFr: '2. Secours, Médicaments & Guides',
-      titleEn: '2. First Aid, Meds & Guides',
-      descFr: 'Premiers secours étape par étape, doses des médicaments, sac 72h et 16 guides pratiques.',
-      descEn: 'Step-by-step first aid, medication dosages, 72h bag, and 16 practical guides.',
-      metaFr: '8 Secours · Médicaments · 16 Guides · Sac 72h',
-      metaEn: '8 First Aid · Meds · 16 Guides · 72h Bag',
+      titleFr: '2. Secours, Médicaments, Guides & Wikis',
+      titleEn: '2. First Aid, Meds, Guides & Wikis',
+      descFr: 'Premiers secours, doses des médicaments, 16 guides intégrés et 23 Wikis/PDF téléchargeables (Kiwix, WikiMed, Wikipédia).',
+      descEn: 'Step-by-step first aid, medication dosages, 16 built-in guides, and 23 downloadable Wikis/PDFs.',
+      metaFr: '8 Secours · Médicaments · 16 Guides · 23 Wikis',
+      metaEn: '8 First Aid · Meds · 16 Guides · 23 Wikis',
       icon: <HeartPulse className="w-5 h-5" />
     },
     {
@@ -200,25 +207,44 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           </button>
         </form>
 
-        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
-          <span className="text-[11px] text-zinc-400 mr-1">
-            {isFr ? 'Exemples 1-clic :' : 'Quick examples:'}
-          </span>
-          {[
-            { label: '💧 Rendre de l’eau potable', q: 'Comment purifier et faire bouillir de l’eau douteuse ?' },
-            { label: '🩸 Arrêter un saignement', q: 'Comment stopper une hémorragie grave et poser un garrot ?' },
-            { label: '❄️ Hypothermie / Froid', q: 'Que faire immédiatement en cas d’hypothermie ?' },
-            { label: '📻 Appeler les secours radio', q: 'Quelles sont les fréquences radio de secours et le message MAYDAY ?' }
-          ].map((ex, i) => (
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-0.5">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] text-zinc-400 mr-1">
+              {isFr ? 'Exemples 1-clic :' : 'Quick examples:'}
+            </span>
+            {[
+              { label: '💧 Rendre de l’eau potable', q: 'Comment purifier et faire bouillir de l’eau douteuse ?' },
+              { label: '🩸 Arrêter un saignement', q: 'Comment stopper une hémorragie grave et poser un garrot ?' },
+              { label: '💊 Dose Paracétamol / Médicaments', q: 'Quelle est la dose de paracétamol adulte et enfant et les contre-indications ?' },
+              { label: '❄️ Hypothermie / Froid', q: 'Que faire immédiatement en cas d’hypothermie ?' }
+            ].map((ex, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => handleAskAiFromHome(ex.q)}
+                className="px-2.5 py-1 rounded-lg bg-[#161920] hover:bg-[#1d222b] border border-[#3a4354] hover:border-amber-500 text-zinc-200 text-[11px] font-semibold cursor-pointer"
+              >
+                {ex.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
             <button
-              key={i}
               type="button"
-              onClick={() => handleAskAiFromHome(ex.q)}
-              className="px-2.5 py-1 rounded-lg bg-[#161920] hover:bg-[#1d222b] border border-[#3a4354] hover:border-amber-500 text-zinc-200 text-[11px] font-semibold cursor-pointer"
+              onClick={() => handleOpenDocsSection('external-catalog')}
+              className="px-3 py-1.5 rounded-lg bg-[#161920] hover:bg-[#1d222b] border border-amber-500/70 text-amber-300 text-[11px] font-bold cursor-pointer flex items-center gap-1.5"
             >
-              {ex.label}
+              <span>📚 {isFr ? 'Wikis & PDF Téléchargeables (23)' : 'Downloadable Wikis (23)'}</span>
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={() => handleOpenDocsSection('local-manuals')}
+              className="px-3 py-1.5 rounded-lg bg-[#161920] hover:bg-[#1d222b] border border-[#3a4354] hover:border-amber-500 text-zinc-200 text-[11px] font-bold cursor-pointer flex items-center gap-1.5"
+            >
+              <span>📖 {isFr ? '16 Guides Intégrés' : '16 Built-in Guides'}</span>
+            </button>
+          </div>
         </div>
       </div>
 

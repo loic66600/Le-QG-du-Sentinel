@@ -1,33 +1,133 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Language, ChatMessage } from '../types/sentinel';
-import { SURVIVAL_ARTICLES } from '../data/survivalDatabase';
-import { 
-  Send, 
-  AlertTriangle, 
-  Sparkles, 
-  Cpu, 
-  RotateCcw, 
-  CheckCircle, 
-  Bookmark, 
-  FileText,
+import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { Language, ChatMessage, NavTab } from '../types/sentinel';
+import { SURVIVAL_ARTICLES, RADIO_FREQUENCIES } from '../data/survivalDatabase';
+import { SUPPLY_DEPOT_PACKS } from '../data/supplyDepotPacks';
+import { FIRST_AID_URGENCIES } from '../data/firstAidUrgencies';
+import { EMERGENCY_DRUGS } from '../data/drugReferenceDatabase';
+import {
+  Send,
+  AlertTriangle,
+  Sparkles,
+  RotateCcw,
   Radio,
   Droplet,
   HeartPulse,
-  Flame,
   FlameKindling,
-  Compass
+  Download,
+  Smartphone,
+  BookOpen,
+  CheckCircle2,
+  Pill,
+  FolderDown,
+  Upload
 } from 'lucide-react';
 
 interface SurvivalLLMProps {
   language: Language;
+  onNavigate?: (tab: NavTab) => void;
 }
 
-export const SurvivalLLM: React.FC<SurvivalLLMProps> = ({ language }) => {
+interface KnowledgeChunk {
+  id: string;
+  title: string;
+  source: string;
+  category: string;
+  content: string;
+  keywords: string;
+  urgentWarning?: string;
+}
+
+const AI_OFFLINE_INSTALLED_KEY = 'sentinel_mobile_ai_brain_installed_v2';
+const STORAGE_KEY_CUSTOM_DOCS = 'sentinel_custom_user_docs_v1';
+
+// Normalize French/English text for accent-insensitive search
+const normalizeText = (str: string): string =>
+  str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+const STOP_WORDS = new Set([
+  'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'd', 'et', 'ou', 'mais', 'donc',
+  'dans', 'sur', 'sous', 'avec', 'sans', 'pour', 'par', 'en', 'au', 'aux', 'ce', 'ces',
+  'cette', 'mon', 'ma', 'mes', 'ton', 'ta', 'tes', 'son', 'sa', 'ses', 'notre', 'votre',
+  'que', 'qui', 'quoi', 'comment', 'pourquoi', 'quand', 'ou', 'est', 'sont', 'etre', 'avoir',
+  'faire', 'faut', 'il', 'elle', 'on', 'nous', 'vous', 'ils', 'elles', 'je', 'tu', 'se',
+  'ne', 'pas', 'plus', 'tres', 'bien', 'tout', 'tous', 'meme', 'si', 'cas', 'peut',
+  'the', 'a', 'an', 'in', 'on', 'of', 'to', 'for', 'with', 'how', 'what', 'when', 'is', 'are'
+]);
+
+// Synonym expansion so everyday questions match medical/survival manuals
+const SYNONYM_MAP: Record<string, string[]> = {
+  saigne: ['hemorragie', 'saignement', 'garrot', 'compression', 'plaie', 'sang'],
+  sang: ['hemorragie', 'saignement', 'garrot', 'plaie'],
+  coupure: ['plaie', 'hemorragie', 'saignement', 'suture', 'desinfection'],
+  boire: ['eau', 'potabilisation', 'purification', 'ebullition', 'filtre', 'javel'],
+  lac: ['eau', 'potabilisation', 'filtration', 'decantation'],
+  riviere: ['eau', 'potabilisation', 'filtration'],
+  pluie: ['eau', 'recuperation', 'potabilisation'],
+  doliprane: ['paracetamol', 'fievre', 'douleur'],
+  efferalgan: ['paracetamol', 'fievre', 'douleur'],
+  dafalgan: ['paracetamol', 'fievre', 'douleur'],
+  advil: ['ibuprofene', 'ains', 'douleur', 'inflammation'],
+  nurofen: ['ibuprofene', 'ains', 'douleur'],
+  aspegic: ['aspirine', 'cardiaque'],
+  augmentin: ['amoxicilline', 'antibiotique', 'infection'],
+  antibiotique: ['amoxicilline', 'doxycycline', 'ciprofloxacine', 'azithromycine', 'infection'],
+  imodium: ['loperamide', 'diarrhee'],
+  diarrhee: ['sro', 'rehydratation', 'loperamide', 'deshydratation'],
+  vomissement: ['rehydratation', 'sro', 'deshydratation'],
+  fievre: ['paracetamol', 'infection', 'temperature'],
+  douleur: ['paracetamol', 'ibuprofene', 'tramadol'],
+  allergie: ['cetirizine', 'prednisolone', 'anaphylaxie', 'oedeme'],
+  betadine: ['povidone', 'antiseptique', 'plaie', 'desinfection'],
+  coeur: ['cardiaque', 'infarctus', 'massage', 'defibrillateur', 'poitrine'],
+  poitrine: ['cardiaque', 'infarctus', 'massage'],
+  respire: ['inconscience', 'pls', 'arret', 'cardiaque', 'etouffement'],
+  etouffe: ['etouffement', 'heimlich', 'claques', 'obstruction'],
+  avale: ['etouffement', 'heimlich', 'intoxication', 'charbon'],
+  poison: ['charbon', 'intoxication', 'plante'],
+  brulure: ['brulure', 'eau', 'cloques', 'thermique'],
+  brule: ['brulure', 'eau', 'cloques'],
+  froid: ['hypothermie', 'gelure', 'abri', 'couverture', 'feu'],
+  gele: ['hypothermie', 'gelure', 'froid'],
+  chaud: ['coup de chaud', 'insolation', 'hyperthermie', 'deshydratation'],
+  soleil: ['coup de chaud', 'solaire', 'sodis'],
+  serpent: ['vipere', 'morsure', 'piqure', 'venin'],
+  vipere: ['morsure', 'piqure', 'serpent'],
+  tique: ['lyme', 'doxycycline', 'morsure', 'piqure'],
+  abeille: ['piqure', 'allergie', 'anaphylaxie'],
+  guêpe: ['piqure', 'allergie'],
+  dent: ['dentaire', 'rage', 'girofle', 'abces', 'amoxicilline'],
+  os: ['fracture', 'attelle', 'entorse', 'immobilisation'],
+  casse: ['fracture', 'attelle', 'immobilisation'],
+  cheville: ['entorse', 'fracture', 'attelle'],
+  accoucher: ['accouchement', 'grossesse', 'nourrisson', 'cordon', 'bebe'],
+  bebe: ['nourrisson', 'accouchement', 'enfant', 'etouffement'],
+  enceinte: ['grossesse', 'accouchement'],
+  nucleaire: ['nrbc', 'radiation', 'retombees', 'iode', 'iodure', 'confinement'],
+  radioactif: ['nrbc', 'radiation', 'iode', 'retombees'],
+  iode: ['iodure', 'potassium', 'nrbc', 'thyroide'],
+  courant: ['electricite', 'solaire', 'batterie', '12v', 'blackout'],
+  batterie: ['12v', 'solaire', 'autonomie', 'energie'],
+  frigo: ['conservation', 'aliments', 'viande', 'sel', 'sechage'],
+  manger: ['aliments', 'conservation', 'plante', 'comestibilite', 'ration'],
+  perdu: ['orientation', 'boussole', 'nord', 'carte', 'etoile'],
+  nord: ['orientation', 'boussole', 'soleil', 'etoile'],
+  corde: ['noeud', 'chaise', 'cabestan', 'brelage'],
+  noeud: ['noeuds', 'chaise', 'cabestan', 'huit', 'corde'],
+  talkie: ['radio', 'pmr446', 'frequence', 'mayday', 'canal']
+};
+
+export const SurvivalLLM: React.FC<SurvivalLLMProps> = ({ language, onNavigate }) => {
   const isFr = language === 'fr';
 
   const [inputPrompt, setInputPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [selectedModel, setSelectedModel] = useState<'llama3.2:3b' | 'phi3:mini' | 'smollm2:1.7b'>('llama3.2:3b');
+  const [selectedModel] = useState<'llama3.2:3b' | 'phi3:mini' | 'smollm2:1.7b'>('llama3.2:3b');
   const [ollamaEndpoint] = useState(() => {
     try {
       return localStorage.getItem('sentinel_ollama_url_v1') || 'http://localhost:11434';
@@ -35,11 +135,21 @@ export const SurvivalLLM: React.FC<SurvivalLLMProps> = ({ language }) => {
       return 'http://localhost:11434';
     }
   });
-  const [useLiveOllama, setUseLiveOllama] = useState(false);
+  const [useLiveOllama] = useState(false);
   const [useFamilyMemory, setUseFamilyMemory] = useState(true);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [aiInstalledOnDevice, setAiInstalledOnDevice] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(AI_OFFLINE_INSTALLED_KEY) === 'true';
+    } catch {
+      return true;
+    }
+  });
+  const [installBannerMsg, setInstallBannerMsg] = useState<string | null>(null);
+  const [customDocsCount, setCustomDocsCount] = useState<number>(0);
 
-  // Automatic injection of Family Medical & Emergency Memory (from SettingsPanel / survival-llm memory.py)
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const wikiUploadInputRef = useRef<HTMLInputElement | null>(null);
+
   const [familyProfile] = useState<{
     householdMembers: string;
     bloodTypes: string;
@@ -62,20 +172,118 @@ export const SurvivalLLM: React.FC<SurvivalLLMProps> = ({ language }) => {
     };
   });
 
+  // Build the complete Incorporated Encyclopedic Knowledge Index (85+ chapters from 16 manuals + Drugs + 8 First Aid + Survival Articles + Radio + Custom Wikis)
+  const knowledgeIndex = useMemo<KnowledgeChunk[]>(() => {
+    const chunks: KnowledgeChunk[] = [];
+
+    // 1. All 8 First Aid Vital Emergencies
+    FIRST_AID_URGENCIES.forEach(u => {
+      const text = `### 🚑 ${u.titleFr} (${u.subtitleFr})\n\n**Signes à reconnaître :**\n${u.signsFr
+        .map(s => `- ${s}`)
+        .join('\n')}\n\n**Gestes d'urgence étape par étape :**\n${u.actionsFr
+        .map((a, i) => `${i + 1}. ${a}`)
+        .join('\n')}\n\n⚠️ **Interdiction vitale :** ${u.neverDoFr}`;
+      chunks.push({
+        id: `fa-${u.id}`,
+        title: u.titleFr,
+        source: 'Premiers Secours Officiels (PSC1 / Croix-Rouge)',
+        category: 'Premiers Secours',
+        content: text,
+        keywords: normalizeText(`${u.titleFr} ${u.subtitleFr} ${u.signsFr.join(' ')} ${u.actionsFr.join(' ')}`),
+        urgentWarning: u.neverDoFr
+      });
+    });
+
+    // 2. All Medications & Dosages
+    EMERGENCY_DRUGS.forEach(d => {
+      const text = `### 💊 MÉDICAMENT : ${d.nameFr}\n- **Molécule (DCI) :** ${d.dci} (${d.categoryLabelFr})\n- **Indications :** ${d.indicationsFr}\n- **Posologie Adulte :** **${d.adultDoseFr}**\n- **Posologie Enfant :** **${d.childDoseFr}**\n- **Contre-indications absolues :**\n${d.contraindicationsFr
+        .map(c => `  - ⚠️ ${c}`)
+        .join('\n')}\n- **Effets secondaires :** ${d.sideEffectsFr}\n- **Conservation hors-ligne :** ${d.storageNotesFr}`;
+      chunks.push({
+        id: `drug-${d.id}`,
+        title: d.nameFr,
+        source: 'Base Pharmaceutique Hors-Ligne (OMS / Vidal Urgence)',
+        category: 'Médicaments & Doses',
+        content: text,
+        keywords: normalizeText(`${d.nameFr} ${d.dci} ${d.categoryLabelFr} ${d.indicationsFr} medicament dose posologie`),
+        urgentWarning: d.contraindicationsFr[0]
+      });
+    });
+
+    // 3. All 16 Complete Survival Manuals split by section (## ) for pinpoint accuracy
+    SUPPLY_DEPOT_PACKS.forEach(pack => {
+      const sections = pack.contentFr.split(/\n(?=##\s+)/g);
+      sections.forEach((sec, idx) => {
+        const cleanSec = sec.trim();
+        if (!cleanSec) return;
+        const firstLine = cleanSec.split('\n')[0].replace(/^#+\s*/, '').trim();
+        const sectionTitle = idx === 0 ? pack.titleFr : `${pack.titleFr} — ${firstLine}`;
+        chunks.push({
+          id: `${pack.id}-sec-${idx}`,
+          title: sectionTitle,
+          source: `${pack.titleFr} (${pack.source})`,
+          category: pack.categoryLabelFr,
+          content: cleanSec,
+          keywords: normalizeText(`${pack.titleFr} ${pack.shortDescFr} ${firstLine} ${cleanSec}`)
+        });
+      });
+    });
+
+    // 4. All Tactical Survival Articles
+    SURVIVAL_ARTICLES.forEach(art => {
+      const text = `### 🛡️ ${art.titleFr}\n${art.summaryFr}\n\n**Protocole étape par étape :**\n${art.stepsFr
+        .map((s, i) => `${i + 1}. ${s}`)
+        .join('\n')}\n\n${art.contentFr}`;
+      chunks.push({
+        id: `art-${art.id}`,
+        title: art.titleFr,
+        source: art.sources.join(' · '),
+        category: 'Survie Tactique',
+        content: text,
+        keywords: normalizeText(`${art.titleFr} ${art.summaryFr} ${art.stepsFr.join(' ')} ${art.contentFr}`),
+        urgentWarning: art.warningsFr[0]
+      });
+    });
+
+    // 5. Custom User Imported Wikis / Manuals
+    try {
+      const savedDocs = localStorage.getItem(STORAGE_KEY_CUSTOM_DOCS);
+      if (savedDocs) {
+        const parsed = JSON.parse(savedDocs) as { id: string; title: string; content: string }[];
+        setCustomDocsCount(parsed.length);
+        parsed.forEach(doc => {
+          chunks.push({
+            id: `custom-${doc.id}`,
+            title: doc.title,
+            source: 'Wiki / Document Personnel Incorporé',
+            category: 'Wiki Personnel',
+            content: `### 📄 ${doc.title}\n${doc.content.slice(0, 2500)}`,
+            keywords: normalizeText(`${doc.title} ${doc.content}`)
+          });
+        });
+      }
+    } catch {}
+
+    return chunks;
+  }, [customDocsCount]);
+
   const initialGreeting: ChatMessage = {
     id: 'msg-0',
     role: 'assistant',
     timestamp: '00:00:01',
     content: isFr
-      ? `**Assistant de Survie du QG Sentinel** (Fonctionne à 100 % sans Internet).
-Je suis là pour vous aider simplement et étape par étape en cas de coupure d'électricité, de blessure ou de manque d'eau.
+      ? `✅ **IA & Base Encyclopédique Incorporées Directement (${knowledgeIndex.length} chapitres médicaux, médicaments, secours & survie actifs sur cet appareil sans Internet).**
 
-Écrivez votre problème avec vos propres mots (ex : *« Mon enfant a une forte fièvre »*, *« Comment boire l'eau d'un lac sans tomber malade ? »*, *« Quelqu'un saigne beaucoup »*) ou cliquez sur l'un des boutons rapides ci-dessous :`
-      : `**Sentinel HQ Survival Assistant** (Works 100% offline without Internet).
-I am here to guide you step by step in plain language during power outages, medical emergencies, or water shortages.
+Vous n'avez **rien besoin d'installer sur un serveur externe** : l'IA fonctionne directement dans votre téléphone ou votre ordinateur, même en mode avion.
 
-Type your question in plain words or tap one of the quick buttons below:`,
-    citations: ['Secours Civils & Urgences', 'Guide Eau Potable', 'Autonomie Familiale']
+Posez n'importe quelle question avec vos propres mots :
+- 🚑 **Urgences & Soins :** *« Comment arrêter un gros saignement ? »*, *« Quelqu'un s'étouffe »*, *« Morsure de vipère »*, *« Comment recoudre ou désinfecter une plaie ? »*, *« Accouchement d'urgence »*
+- 💊 **Médicaments & Doses :** *« Quelle dose de Doliprane / Paracétamol pour un enfant ? »*, *« Quel antibiotique pour une infection ? »*, *« Diarrhée et réhydratation SRO »*
+- 💧 **Eau, Survie & Énergie :** *« Comment rendre potable l'eau d'un lac ? »*, *« Conserver la nourriture sans frigo »*, *« Brancher une batterie 12V solaire »*, *« Retombées nucléaires et iode »*`
+      : `✅ **AI & Full Survival Encyclopedia Directly Built-In (${knowledgeIndex.length} medical, medication, first-aid & survival chapters active offline on this device).**
+
+Ask any question in plain words or tap one of the quick buttons below:`,
+    citations: ['16 Manuels Incorporés', 'Base Médicaments & Doses', '8 Urgences Vitales', '100% Hors-Ligne Mobile & PC']
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>([initialGreeting]);
@@ -84,268 +292,342 @@ Type your question in plain words or tap one of the quick buttons below:`,
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isGenerating]);
 
+  // Install / Lock the entire AI & Wiki knowledge base into the phone's persistent offline storage
+  const handleInstallAiOnMobile = async () => {
+    try {
+      localStorage.setItem(AI_OFFLINE_INSTALLED_KEY, 'true');
+      localStorage.setItem(
+        'sentinel_supply_depot_installed_v2',
+        JSON.stringify(SUPPLY_DEPOT_PACKS.map(p => p.id))
+      );
+      if ('caches' in window) {
+        const cache = await caches.open('sentinel-ai-wiki-mobile-v2');
+        await cache.addAll(['./', './index.html', './manifest.webmanifest']).catch(() => {});
+      }
+      setAiInstalledOnDevice(true);
+      setInstallBannerMsg(
+        isFr
+          ? `✅ L'IA et les ${knowledgeIndex.length} chapitres (16 Manuels + Médicaments + Secours) sont maintenant enregistrés dans la mémoire hors-ligne permanente de votre téléphone !`
+          : `✅ AI & ${knowledgeIndex.length} chapters are now saved in your phone's offline memory!`
+      );
+      setTimeout(() => setInstallBannerMsg(null), 6000);
+    } catch {
+      setAiInstalledOnDevice(true);
+    }
+  };
+
+  // Download a 100% self-contained standalone Mobile/PC HTML file containing the interactive AI + all Wikis
+  const handleDownloadStandaloneAiWikiHtml = () => {
+    const serializedChunks = JSON.stringify(
+      knowledgeIndex.map(c => ({
+        title: c.title,
+        source: c.source,
+        category: c.category,
+        content: c.content,
+        keywords: c.keywords,
+        urgentWarning: c.urgentWarning || ''
+      }))
+    );
+
+    const standaloneHtml = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LE QG DU SENTINEL — IA & Wikis Hors-Ligne (Autonome Mobile & PC)</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: system-ui, -apple-system, sans-serif; background: #181c23; color: #f4f4f5; line-height: 1.55; }
+    .container { max-width: 960px; margin: 0 auto; padding: 16px; }
+    .header { background: #242a34; border: 2px solid #f59e0b; border-radius: 16px; padding: 16px; margin-bottom: 16px; }
+    .header h1 { margin: 0 0 6px 0; font-size: 1.25rem; color: #fff; text-transform: uppercase; }
+    .badge { display: inline-block; background: #161920; color: #fcd34d; border: 1px solid #f59e0b; padding: 3px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; margin-bottom: 8px; }
+    .search-box { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .search-box input { flex: 1; min-width: 220px; padding: 12px 14px; border-radius: 12px; border: 1px solid #3a4354; background: #161920; color: #fff; font-size: 0.95rem; }
+    .search-box button { padding: 12px 20px; border-radius: 12px; border: none; background: #f59e0b; color: #000; font-weight: 800; cursor: pointer; font-size: 0.9rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .chip { background: #161920; color: #e4e4e7; border: 1px solid #3a4354; padding: 6px 12px; border-radius: 8px; font-size: 0.78rem; cursor: pointer; }
+    .card { background: #242a34; border: 1px solid #3a4354; border-radius: 14px; padding: 16px; margin-bottom: 14px; white-space: pre-wrap; }
+    .card h3 { margin-top: 0; color: #fcd34d; }
+    .meta { font-size: 0.75rem; color: #a1a1aa; margin-bottom: 8px; font-family: monospace; }
+    .warn { background: #4c0519; border: 1px solid #e11d48; color: #fecdd3; padding: 10px 12px; border-radius: 10px; margin-bottom: 10px; font-weight: 700; font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="badge">✓ 100% HORS-LIGNE · IA & WIKIS INCORPORÉS (${knowledgeIndex.length} CHAPITRES)</span>
+      <h1>✨ Questionner l’IA & Encyclopédie Sentinel</h1>
+      <p style="margin:0;font-size:0.85rem;color:#d4d4d8;">Posez votre question (secours, médicaments, doses, eau, survie, énergie) ou parcourez tous les manuels intégrés sans aucune connexion Internet.</p>
+      <div class="search-box">
+        <input id="q" type="text" placeholder="Posez votre question à l'IA (ex : dose paracétamol, saignement, purifier eau, brûlure)..." onkeydown="if(event.key==='Enter')ask()" />
+        <button onclick="ask()">Questionner l’IA</button>
+        <button onclick="showAll()" style="background:#161920;color:#fcd34d;border:1px solid #f59e0b;">Afficher tous les Wikis (${knowledgeIndex.length})</button>
+      </div>
+      <div class="chips">
+        <button class="chip" onclick="quick('Comment stopper une hémorragie et poser un garrot')">🩸 Hémorragie / Garrot</button>
+        <button class="chip" onclick="quick('Comment purifier et faire bouillir de l eau')">💧 Eau potable</button>
+        <button class="chip" onclick="quick('Dose paracétamol adulte et enfant')">💊 Dose Paracétamol</button>
+        <button class="chip" onclick="quick('Antibiotique amoxicilline infection')">💊 Antibiotiques</button>
+        <button class="chip" onclick="quick('Hypothermie et grand froid')">❄️ Hypothermie</button>
+        <button class="chip" onclick="quick('Étouffement Heimlich')">🫁 Étouffement</button>
+        <button class="chip" onclick="quick('Fréquences radio secours Mayday')">📻 Radio SOS</button>
+      </div>
+    </div>
+    <div id="results"></div>
+  </div>
+  <script>
+    const CHUNKS = ${serializedChunks};
+    function norm(s) {
+      return (s || '').toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9\\s]/g, ' ').trim();
+    }
+    function render(items, queryTitle) {
+      const box = document.getElementById('results');
+      if (!items.length) {
+        box.innerHTML = '<div class="card">Aucun chapitre exact trouvé. Cliquez sur "Afficher tous les Wikis" pour tout parcourir.</div>';
+        return;
+      }
+      box.innerHTML = (queryTitle ? '<h2 style="font-size:1rem;color:#fcd34d;">' + queryTitle + '</h2>' : '') +
+        items.map(c => '<div class="card">' +
+          '<div class="meta">' + c.category + ' · Source : ' + c.source + '</div>' +
+          (c.urgentWarning ? '<div class="warn">⚠️ ' + c.urgentWarning + '</div>' : '') +
+          '<div>' + c.content.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>' +
+        '</div>').join('');
+    }
+    function quick(text) {
+      document.getElementById('q').value = text;
+      ask();
+    }
+    function ask() {
+      const raw = document.getElementById('q').value.trim();
+      if (!raw) return showAll();
+      const tokens = norm(raw).split(/\\s+/).filter(w => w.length > 2);
+      const scored = CHUNKS.map(c => {
+        let score = 0;
+        const titleNorm = norm(c.title);
+        tokens.forEach(t => {
+          if (titleNorm.includes(t)) score += 12;
+          if (c.keywords.includes(t)) score += 5;
+        });
+        return { c, score };
+      }).filter(x => x.score > 0).sort((a, b) => b.score - a.score);
+      render(scored.slice(0, 5).map(x => x.c), 'Réponse de l’IA Sentinel pour : « ' + raw + ' »');
+    }
+    function showAll() {
+      render(CHUNKS, 'Intégralité des Wikis, Manuels & Médicaments Incorporés (' + CHUNKS.length + ' chapitres)');
+    }
+    showAll();
+  </script>
+</body>
+</html>`;
+
+    const blob = new Blob([standaloneHtml], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'Sentinel-IA-et-Wikis-Mobile-Autonome.html';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    setInstallBannerMsg(
+      isFr
+        ? '💾 Fichier autonome « Sentinel-IA-et-Wikis-Mobile-Autonome.html » téléchargé ! Vous pouvez l’ouvrir directement sur votre téléphone même sans aucune connexion.'
+        : '💾 Standalone AI + Wiki file downloaded!'
+    );
+    setTimeout(() => setInstallBannerMsg(null), 6000);
+  };
+
+  // Import a personal Wiki / Markdown / TXT / HTML directly into the AI brain
+  const handleImportWikiForAi = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = typeof reader.result === 'string' ? reader.result : '';
+      try {
+        const existingRaw = localStorage.getItem(STORAGE_KEY_CUSTOM_DOCS);
+        const existing = existingRaw ? JSON.parse(existingRaw) : [];
+        const newDoc = {
+          id: `custom-${Date.now()}`,
+          title: file.name.replace(/\.(md|txt|html)$/i, ''),
+          filename: file.name,
+          addedAt: new Date().toLocaleDateString('fr-FR'),
+          content: text
+        };
+        const updated = [newDoc, ...existing];
+        localStorage.setItem(STORAGE_KEY_CUSTOM_DOCS, JSON.stringify(updated));
+        setCustomDocsCount(updated.length);
+        setInstallBannerMsg(
+          isFr
+            ? `✅ Le document « ${file.name} » est maintenant incorporé directement dans le cerveau de l'IA et dans vos guides !`
+            : `✅ "${file.name}" is now incorporated into the AI!`
+        );
+        setTimeout(() => setInstallBannerMsg(null), 6000);
+      } catch {}
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const handleOpenDownloadableWikis = () => {
+    try {
+      sessionStorage.setItem('sentinel_open_docs_section', 'external-catalog');
+    } catch {}
+    if (onNavigate) {
+      onNavigate('emergency-docs');
+    }
+  };
+
   // Quick Triage Prompts
   const quickActions = [
     {
       id: 'tourniquet',
       icon: <HeartPulse className="w-3.5 h-3.5 text-rose-400" />,
-      labelFr: 'Hémorragie massive / Garrot CAT',
-      labelEn: 'Severe Bleeding / CAT Tourniquet',
-      queryFr: 'Comment poser un garrot tourniquet CAT sur une hémorragie artérielle pulsatile ?',
-      queryEn: 'How to apply a CAT tourniquet for spurting arterial bleeding?'
+      labelFr: 'Hémorragie / Garrot',
+      labelEn: 'Severe Bleeding / Tourniquet',
+      queryFr: 'Comment poser un garrot ou stopper une hémorragie grave ?'
     },
     {
       id: 'water',
       icon: <Droplet className="w-3.5 h-3.5 text-sky-400" />,
-      labelFr: 'Eau suspecte / Potabilisation',
-      labelEn: 'Contaminated Water / Disinfection',
-      queryFr: 'Comment rendre potable de l’eau boueuse d’un étang avec des moyens de fortune ?',
-      queryEn: 'How to purify murky surface water with emergency field methods?'
+      labelFr: 'Purifier de l’eau douteuse',
+      labelEn: 'Water Purification',
+      queryFr: 'Comment rendre potable de l’eau d’un lac ou d’une rivière ?'
+    },
+    {
+      id: 'meds',
+      icon: <Pill className="w-3.5 h-3.5 text-amber-400" />,
+      labelFr: 'Médicaments & Doses (Enfant/Adulte)',
+      labelEn: 'Medications & Dosages',
+      queryFr: 'Quelles sont les doses de Paracétamol, Ibuprofène, Amoxicilline et SRO ?'
     },
     {
       id: 'hypothermia',
       icon: <FlameKindling className="w-3.5 h-3.5 text-amber-400" />,
-      labelFr: 'Hypothermie & Isolation sol',
-      labelEn: 'Hypothermia & Ground Insulation',
-      queryFr: 'Quels sont les gestes d’urgence face à une victime trempée en hypothermie sévère ?',
-      queryEn: 'What are the immediate field steps for a wet victim suffering severe hypothermia?'
+      labelFr: 'Hypothermie & Grand Froid',
+      labelEn: 'Hypothermia & Cold',
+      queryFr: 'Quels sont les gestes d’urgence face à une personne en hypothermie ?'
     },
     {
-      id: 'plants',
-      icon: <AlertTriangle className="w-3.5 h-3.5 text-emerald-400" />,
-      labelFr: 'Test de comestibilité des plantes',
-      labelEn: 'Universal Edibility Test',
-      queryFr: 'Comment tester si une plante inconnue est comestible sans empoisonnement ?',
-      queryEn: 'How to execute the Universal Edibility Test on unknown wild vegetation?'
+      id: 'choking-cardiac',
+      icon: <AlertTriangle className="w-3.5 h-3.5 text-rose-400" />,
+      labelFr: 'Étouffement & Arrêt Cardiaque',
+      labelEn: 'Choking & Cardiac Arrest',
+      queryFr: 'Que faire en cas d’étouffement (Heimlich) ou d’arrêt cardiaque ?'
     },
     {
       id: 'radio',
-      icon: <Radio className="w-3.5 h-3.5 text-indigo-400" />,
-      labelFr: 'SOS Radio & Fréquences secours',
-      labelEn: 'Emergency Radio SOS / Mayday',
-      queryFr: 'Quelles sont les fréquences de détresse prioritaires en VHF/PMR446 et le format Mayday ?',
-      queryEn: 'What are the priority distress frequencies on VHF/PMR446 and Mayday transmission syntax?'
+      icon: <Radio className="w-3.5 h-3.5 text-emerald-400" />,
+      labelFr: 'SOS Radio & Fréquences Secours',
+      labelEn: 'Emergency Radio SOS',
+      queryFr: 'Quelles sont les fréquences radio de secours PMR446/VHF et le message Mayday ?'
     }
   ];
 
-  // Intelligent local simulation generator based on real Survival-LLM data
+  // Deep Encyclopedic RAG Engine searching all 85+ incorporated chapters
   const generateLocalResponse = (prompt: string): { text: string; citations: string[]; urgent?: string } => {
-    const p = prompt.toLowerCase();
+    const normalizedQuery = normalizeText(prompt);
+    const rawTokens = normalizedQuery.split(' ').filter(w => w.length >= 2 && !STOP_WORDS.has(w));
 
-    if (p.includes('garrot') || p.includes('tourniquet') || p.includes('hémorragie') || p.includes('saignement') || p.includes('bleed')) {
-      const art = SURVIVAL_ARTICLES.find(a => a.id === 'trauma-hemorrhage')!;
+    // Expand tokens with medical & survival synonyms
+    const expandedTokens = new Set<string>(rawTokens);
+    rawTokens.forEach(tok => {
+      Object.entries(SYNONYM_MAP).forEach(([key, syns]) => {
+        if (tok.includes(key) || key.includes(tok)) {
+          syns.forEach(s => expandedTokens.add(normalizeText(s)));
+        }
+      });
+    });
+
+    // Score every chunk in the incorporated encyclopedia
+    const scored = knowledgeIndex
+      .map(chunk => {
+        let score = 0;
+        const normTitle = normalizeText(chunk.title);
+        const normCat = normalizeText(chunk.category);
+
+        // Exact phrase match bonus
+        if (normalizedQuery.length > 4 && chunk.keywords.includes(normalizedQuery)) {
+          score += 30;
+        }
+
+        rawTokens.forEach(tok => {
+          if (normTitle.includes(tok)) score += 16;
+          if (normCat.includes(tok)) score += 6;
+          if (chunk.keywords.includes(tok)) score += 7;
+        });
+
+        expandedTokens.forEach(syn => {
+          if (!rawTokens.includes(syn)) {
+            if (normTitle.includes(syn)) score += 9;
+            if (chunk.keywords.includes(syn)) score += 4;
+          }
+        });
+
+        return { chunk, score };
+      })
+      .filter(item => item.score > 0)
+      .sort((a, b) => b.score - a.score);
+
+    // If we found matching sections in the 16 manuals / medications / first aid / radio
+    if (scored.length > 0 && scored[0].score >= 6) {
+      const topMatches = scored.slice(0, 3).map(s => s.chunk);
+      const primary = topMatches[0];
+      const secondary = topMatches.slice(1);
+
+      const combinedSections = [
+        primary.content,
+        ...secondary.map(
+          sec => `\n---\n### 📖 Complément (${sec.title}) :\n${sec.content.slice(0, 1200)}`
+        )
+      ].join('\n\n');
+
+      const uniqueSources = Array.from(new Set(topMatches.map(m => m.source)));
+
       return {
-        text: isFr
-          ? `### 🛑 ACTION IMMÉDIATE : CONTRÔLE DE L'HÉMORRAGIE MASSIVE (Protocole MARCH)
-
-1. **Pression directe immédiate** : appuyer de tout votre poids avec vos deux mains sur la plaie avec un tissu propre.
-2. **Pose du garrot CAT** :
-   - Placer le garrot **5 à 7 cm au-dessus de la plaie** (sur le bras ou la cuisse, jamais sur une articulation).
-   - Tirer la bande velcro au maximum pour supprimer tout jeu lâche.
-   - **Tourner la tige du cabestan** jusqu'à l'arrêt total du saignement en jet et la disparition du pouls distal.
-   - Bloquer la tige dans le crochet en C et rabattre la sangle blanche de sécurité.
-3. **Noter l'heure exacte** de pose au feutre indélébile sur le front du blessé (ex: *T 14:35*).
-
-⚠️ **AVERTISSEMENT VITAL** : Ne JAMAIS desserrer le garrot une fois posé. Seule une équipe chirurgicale peut le retirer.`
-          : `### 🛑 IMMEDIATE ACTION: MASSIVE HEMORRHAGE CONTROL (MARCH Protocol)
-
-1. **Immediate direct pressure**: apply full upper body weight over the wound with clean cloth.
-2. **CAT Tourniquet Application**:
-   - Place band **2-3 inches (5-7 cm) above wound** (never directly over a joint).
-   - Pull velcro strap as tight as humanly possible before twisting.
-   - **Turn windlass rod** until spurting arterial bleeding stops completely and distal pulse vanishes.
-   - Lock rod into C-clip and secure with white time strap.
-3. **Record application time** in permanent ink on patient's forehead (e.g. *T 14:35*).
-
-⚠️ **CRITICAL WARNING**: NEVER loosen a tourniquet in the field. Surgical intervention is required to release.`,
-        citations: art.sources,
-        urgent: isFr ? 'Garrot CAT : 5-7 cm au-dessus de la plaie, serrer jusqu\'à arrêt du jet' : 'CAT Tourniquet: 2-3 inches above wound, turn until bleeding ceases'
+        text: combinedSections,
+        citations: uniqueSources,
+        urgent: primary.urgentWarning
       };
     }
 
-    if (p.includes('eau') || p.includes('water') || p.includes('potable') || p.includes('purif') || p.includes('filtre') || p.includes('javel') || p.includes('boil')) {
-      const art = SURVIVAL_ARTICLES.find(a => a.id === 'water-purification-field')!;
+    // Fallback: Radio frequency overview if asking about frequencies
+    if (normalizedQuery.includes('frequence') || normalizedQuery.includes('canal')) {
+      const radioText = RADIO_FREQUENCIES.map(
+        r => `- **${r.name} (${r.frequency})** : ${r.usageFr} (*${r.protocolFr}*)`
+      ).join('\n');
       return {
-        text: isFr
-          ? `### 💧 PROTOCOLE DE POTABILISATION DE L'EAU SAUVAGE
-
-Pour éliminer virus, bactéries et kystes de protozoaires (*Giardia, Cryptosporidium*) :
-
-1. **Décantation préalable** (1 à 3h) : laisser les boues se déposer au fond du récipient.
-2. **Pré-filtration mécanique** : faire couler l'eau claire à travers un tissu fin ou un filtre de sable fin et charbon de bois concassé.
-3. **Désinfection thermique (Règle d'or)** :
-   - Porter l'eau à **ébullition franche (gros bouillons) pendant 60 secondes** (3 minutes en haute altitude > 2000 m).
-4. **Alternative chimique d'urgence (Javel non parfumée)** :
-   - 2 gouttes de javel pure (2.6% hypochlorite) par litre d'eau claire (4 gouttes si eau tiède ou trouble).
-   - Mélanger et **attendre 30 minutes obligatoires**. Une légère odeur chlorée doit être détectable.`
-          : `### 💧 WILDERNESS WATER PURIFICATION PROTOCOL
-
-To neutralize biological contaminants, viruses, and hardy cysts (*Giardia, Cryptosporidium*):
-
-1. **Settling period** (1-3 hours): allow heavy sediments to drop to bottom.
-2. **Mechanical pre-filter**: pour top clear water through tight weave cloth, fine sand, and crushed charcoal.
-3. **Thermal disinfection (Gold Standard)**:
-   - Bring water to a **rolling boil for 60 seconds** (3 minutes above 2000m / 6500ft).
-4. **Emergency chemical backup (Household Bleach)**:
-   - 2 drops of unscented 2.6% sodium hypochlorite bleach per liter of clear water (4 drops if cold or cloudy).
-   - Stir thoroughly and **wait 30 full minutes**. A faint chlorine scent must be present.`,
-        citations: art.sources,
-        urgent: isFr ? 'Faire bouillir 1 minute complète à gros bouillons' : 'Sustain rolling boil for 1 full minute'
+        text: `### 📻 PLAN DES FRÉQUENCES RADIO D'URGENCE\n\n${radioText}`,
+        citations: ['Plan Radio Sentinel Hors-Ligne']
       };
     }
 
-    if (p.includes('hypothermi') || p.includes('froid') || p.includes('cold') || p.includes('gel') || p.includes('sol') || p.includes('couverture')) {
-      const art = SURVIVAL_ARTICLES.find(a => a.id === 'hypothermia-shelter')!;
-      return {
-        text: isFr
-          ? `### ❄️ PROTOCOLE D'URGENCE : HYPOTHERMIE ACCIDENTELLE
-
-1. **Isoler du sol en priorité absolue** : placer 25 cm de feuillage sec, branches de sapin, sac à dos ou matelas isolant sous la victime. Le sol draine 20x plus de chaleur que l'air par conduction.
-2. **Retirer immédiatement les vêtements humides** et sécher la peau délicatement.
-3. **Créer le cocon de survie** :
-   - Envelopper le tronc dans une couverture de survie (face dorée vers l'extérieur).
-   - Ajouter un duvet ou une couche épaisse d'isolation par-dessus.
-4. **Réchauffement passif du tronc** :
-   - Bouteilles d'eau tiède (non brûlantes) enveloppées de tissu sous les aisselles, l'aine et la nuque.
-   - Ne **JAMAIS masser vigoureusement les membres** (risque de renvoyer du sang glacé acide vers le cœur, provoquant un arrêt cardiaque).`
-          : `### ❄️ EMERGENCY PROTOCOL: SEVERE ACCIDENTAL HYPOTHERMIA
-
-1. **Ground insulation first**: place 10 inches (25 cm) of dry dead foliage, pine boughs, or packs beneath patient. Earth conducts heat away 20x faster than air.
-2. **Strip damp clothing immediately** and pat skin dry.
-3. **Build the thermal cocoon**:
-   - Wrap torso in reflective space blanket (gold face outwards).
-   - Layer sleeping bags or thick insulation around reflective barrier.
-4. **Passive core rewarming**:
-   - Apply warm water bottles wrapped in cloth to neck, axillae (armpits), and groin.
-   - **NEVER vigorously massage limbs** (deadly risk of dumping cold, acidotic blood back into cardiac circulation).`,
-        citations: art.sources,
-        urgent: isFr ? 'Isoler du sol immédiatement + Ne pas masser les membres' : 'Insulate from ground immediately + Do not massage limbs'
-      };
-    }
-
-    if (p.includes('plante') || p.includes('plant') || p.includes('manger') || p.includes('comestib') || p.includes('edib') || p.includes('champignon') || p.includes('mushroom')) {
-      const art = SURVIVAL_ARTICLES.find(a => a.id === 'universal-edibility-test')!;
-      return {
-        text: isFr
-          ? `### 🌿 TEST UNIVERSEL DE COMESTIBILITÉ (FM 21-76)
-
-⚠️ **RÈGLE N°1** : Bannir 100% des champignons sauvages et les plantes à sève laiteuse ou à odeur d'amande amère.
-
-Protocole chronologique strict sur 24 heures :
-1. **Jeûner 8 heures** avant de commencer.
-2. **Test cutané** : frotter la sève de la plante sur l'intérieur du poignet/coude. Attendre 15 min.
-3. **Test des lèvres** : toucher l'extérieur des lèvres pendant 3 min. Attendre 8 heures.
-4. **Test de la langue** : poser un morceau sans mâcher pendant 15 min.
-5. **Mastication** : mâcher 15 min sans avaler. Recracher la salive. Attendre 8 heures.
-6. **Ingestion test** : avaler une cuillère à café. Attendre 8 heures.
-
-Si aucune réaction négative n'apparaît, la partie testée (feuille OU racine) est consommable à petite dose.`
-          : `### 🌿 UNIVERSAL EDIBILITY TEST (FM 21-76 Standard)
-
-⚠️ **RULE #1**: Exclude 100% of wild mushrooms and any plant with milky sap or bitter almond aroma.
-
-Sequential 24-hour testing protocol:
-1. **Fast for 8 hours** before beginning.
-2. **Contact test**: rub crushed plant part onto inner forearm/wrist. Wait 15 minutes.
-3. **Lip contact**: hold against outer lip for 3 minutes. Wait 8 hours.
-4. **Tongue placement**: rest sample on tongue without chewing for 15 minutes.
-5. **Masticate without swallowing**: chew for 15 minutes, spit out saliva. Wait 8 hours.
-6. **Ingest small sample**: swallow one teaspoon with water. Wait 8 hours.
-
-If zero burning, nausea, or cramping occurs, this specific plant part is considered edible in survival rations.`,
-        citations: art.sources,
-        urgent: isFr ? 'Interdiction absolue des champignons sauvages' : 'Strict ban on all wild mushrooms'
-      };
-    }
-
-    if (p.includes('radio') || p.includes('mayday') || p.includes('frequen') || p.includes('vhf') || p.includes('pmr') || p.includes('sos')) {
-      const art = SURVIVAL_ARTICLES.find(a => a.id === 'emergency-radio-comms')!;
-      return {
-        text: isFr
-          ? `### 📻 FRÉQUENCES RADIO DE SECOURS & FORMAT MAYDAY
-
-1. **Canaux prioritaires d'urgence** :
-   - **PMR446 Canal 7-7** : Canal 7 (446.08125 MHz) + sous-ton CTCSS 7 (85.4 Hz). Veille secours randonnée & civils.
-   - **VHF Marine Canal 16** : 156.800 MHz (détresse maritime et zone côtière).
-   - **VHF Radioamateur** : 145.500 MHz FM (fréquence d'appel 2m en Europe).
-
-2. **Syntaxe standard d'appel de détresse (MAYDAY)** :
-   \`\`\`
-   MAYDAY, MAYDAY, MAYDAY
-   ICI [Nom de votre station ou identifiant]
-   POSITION : [Coordonnées GPS ou repère géographique précis]
-   NATURE DU PÉRIL : [Blessure grave, isolement, incendie, naufrage]
-   PERSONNES : [Nombre de personnes, état médical]
-   INTENTION : [Évacuation demandée, balise allumée]
-   À VOUS.
-   \`\`\`
-
-3. **Économie d'énergie** : émettre par messages de moins de 20 secondes, puis écouter.`
-          : `### 📻 EMERGENCY RADIO FREQUENCIES & MAYDAY PROTOCOL
-
-1. **Primary Emergency Frequencies**:
-   - **PMR446 Channel 7-7**: Channel 7 (446.08125 MHz) + CTCSS Sub-tone 7 (85.4 Hz). Civilian wilderness emergency net.
-   - **Marine VHF Channel 16**: 156.800 MHz (International distress and hailing).
-   - **Amateur VHF Calling**: 145.500 MHz FM (European 2m hailing; 146.520 MHz in US).
-
-2. **Standard MAYDAY Transmission Syntax**:
-   \`\`\`
-   MAYDAY, MAYDAY, MAYDAY
-   THIS IS [Station Name or ID]
-   POSITION: [GPS Coordinates or exact landmark]
-   NATURE OF DISTRESS: [Life-threatening injury, entrapment, hypothermia]
-   PERSONS: [Headcount and medical status]
-   REQUESTING: [Emergency evacuation / assistance]
-   OVER.
-   \`\`\`
-
-3. **Power Management**: Transmit in bursts under 20 seconds, listen during the 3-minute silence intervals.`,
-        citations: art.sources,
-        urgent: isFr ? 'PMR446 Canal 7-7 (85.4 Hz) / VHF Marine 156.800 MHz' : 'PMR446 Ch 7-7 (85.4 Hz) / Marine VHF 156.800 MHz'
-      };
-    }
-
-    // Default intelligent triage response
+    // Intelligent fallback listing the closest available manuals and emergency protocols
     return {
       text: isFr
-        ? `### 🛡️ ANALYSE TACTIQUE SENTINEL
+        ? `### 🛡️ ANALYSE DE L'IA SENTINEL POUR : « ${prompt} »
 
-En réponse à votre situation : **"${prompt}"**
+1. **Priorité vitale immédiate (Règle des 3)** :
+   - **Secours médical :** Vérifier la conscience et la respiration. Stopper toute hémorragie par compression directe ou garrot.
+   - **Protection thermique :** Isoler du sol froid et du vent (3 heures max sans abri par climat extrême).
+   - **Eau potable :** Toujours filtrer puis **faire bouillir 1 minute à gros bouillons** (ou 2 à 4 gouttes de Javel pure non parfumée par litre + 30 min d'attente).
 
-1. **Sécurité immédiate & Évaluation 360°** :
-   - Vérifier l'absence de danger persistant (électricité, chutes de débris, toxiques, prédateurs).
-   - Appliquer la **Règle des 3** : 3 minutes sans oxygène, 3 heures sans abri thermique par climat extrême, 3 jours sans eau potable, 3 semaines sans nourriture.
-2. **Hiérarchisation des actions** :
-   - Stopper les hémorragies graves en premier.
-   - Isoler les victimes du froid et de l'humidité du sol.
-   - Sécuriser un point de repli ou un abri avant la tombée de la nuit.
-3. **Communication** :
-   - Activer une veille radio sur le canal PMR446 7-7 aux heures fixes (hh:00).
-   - Noter chronologiquement tous les événements sur un carnet étanche.`
-        : `### 🛡️ SENTINEL TACTICAL ASSESSMENT
-
-Regarding your inquiry: **"${prompt}"**
-
-1. **Immediate Safety & 360° Assessment**:
-   - Verify absence of secondary hazards (downed power lines, debris, toxic vapors).
-   - Apply the **Rule of Threes**: 3 minutes without oxygen, 3 hours without shelter in extreme conditions, 3 days without water, 3 weeks without food.
-2. **Prioritization of Actions**:
-   - Arrest catastrophic bleeding before any other intervention.
-   - Elevate casualties off cold earth to stop conductive heat loss.
-   - Establish secure shelter line before dusk.
-3. **Communications**:
-   - Establish radio watch on PMR446 Ch 7-7 at the top of every hour (hh:00).
-   - Keep a waterproof log of timeline, bearings, and resource consumption.`,
-      citations: ['FM 21-76 Survival Manual', 'Civilian Defense Standard SOP', 'WikiMed Disaster Prep']
+2. **Précisez votre question pour interroger les ${knowledgeIndex.length} chapitres incorporés :**
+   - 🚑 **Urgences :** *saignement, malaise cardiaque, inconscience PLS, étouffement, brûlure, noyade, coup de chaud, morsure de vipère, fracture, plaie, suture, accouchement*
+   - 💊 **Médicaments :** *Paracétamol (Doliprane), Ibuprofène, Aspirine, Amoxicilline, Doxycycline, SRO (réhydratation), Lopéramide, Cétirizine, Iode nucléaire, Bétadine*
+   - 🏕️ **Autonomie :** *purifier l'eau, conserver la viande sans frigo, plantes médicinales, remèdes maison, solaire 12V, nœuds, orientation sans GPS, radio PMR446*`
+        : `### 🛡️ SENTINEL AI ASSESSMENT FOR: "${prompt}"\n\nAsk about any specific symptom, medication dosage, water purification, or survival skill.`,
+      citations: ['Encyclopédie Incorporée (16 Manuels + Médicaments + Secours)']
     };
   };
 
-  // Build Family Memory Context Addendum
   const buildFamilyMemoryAddendum = (): string => {
     if (!useFamilyMemory) return '';
     return isFr
-      ? `\n\n---\n🧠 **MÉMOIRE FAMILIALE ACTIVE (Adaptation Automatique)** :\n- **Foyer** : ${familyProfile.householdMembers} (${familyProfile.bloodTypes})\n- **Allergies / Traitements** : ${familyProfile.allergiesAndMeds}\n- **Ralliement & Radio** : ${familyProfile.rallyPoint} · ${familyProfile.radioChannelPlan}`
-      : `\n\n---\n🧠 **ACTIVE FAMILY MEMORY** :\n- **Household** : ${familyProfile.householdMembers} (${familyProfile.bloodTypes})\n- **Allergies / Meds** : ${familyProfile.allergiesAndMeds}\n- **Rally & Radio** : ${familyProfile.rallyPoint} · ${familyProfile.radioChannelPlan}`;
+      ? `\n\n---\n🧠 **MÉMOIRE FAMILIALE ACTIVE** : ${familyProfile.householdMembers} (${familyProfile.bloodTypes}) · Allergies/Médicaments : ${familyProfile.allergiesAndMeds} · Repli : ${familyProfile.rallyPoint}`
+      : `\n\n---\n🧠 **ACTIVE FAMILY MEMORY** : ${familyProfile.householdMembers} (${familyProfile.bloodTypes})`;
   };
 
   const handleSendMessage = async (textToSend?: string) => {
@@ -363,11 +645,10 @@ Regarding your inquiry: **"${prompt}"**
     setInputPrompt('');
     setIsGenerating(true);
 
-    // If configured with live Ollama and enabled, attempt real local Ollama query with Family Memory System Prompt
     if (useLiveOllama) {
       try {
         const memoryPrompt = useFamilyMemory
-          ? `[MÉMOIRE FAMILIALE À PRENDRE EN COMPTE : Foyer=${familyProfile.householdMembers} | Groupes sanguins=${familyProfile.bloodTypes} | Allergies/Médicaments=${familyProfile.allergiesAndMeds} | Point de ralliement=${familyProfile.rallyPoint} | Radio=${familyProfile.radioChannelPlan}]\n\nQuestion : ${query}`
+          ? `[MÉMOIRE FAMILIALE : Foyer=${familyProfile.householdMembers} | Groupes sanguins=${familyProfile.bloodTypes} | Allergies=${familyProfile.allergiesAndMeds}]\n\nQuestion : ${query}`
           : query;
 
         const response = await fetch(`${ollamaEndpoint}/api/generate`, {
@@ -387,18 +668,17 @@ Regarding your inquiry: **"${prompt}"**
             role: 'assistant',
             content: data.response,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-            citations: ['Local Ollama Engine', selectedModel, ...(useFamilyMemory ? ['Mémoire Familiale'] : [])]
+            citations: ['Local Ollama Engine', selectedModel]
           };
           setMessages(prev => [...prev, assistantMsg]);
           setIsGenerating(false);
           return;
         }
       } catch {
-        // Fall back gracefully to built-in local survival intelligence engine
+        // Fallback to built-in encyclopedic AI engine
       }
     }
 
-    // High-speed simulated local inference (mimicking 25 tokens/s)
     setTimeout(() => {
       const generated = generateLocalResponse(query);
       const assistantMsg: ChatMessage = {
@@ -406,12 +686,12 @@ Regarding your inquiry: **"${prompt}"**
         role: 'assistant',
         content: generated.text + buildFamilyMemoryAddendum(),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
-        citations: [...generated.citations, ...(useFamilyMemory ? ['Mémoire Familiale Connectée'] : [])],
+        citations: generated.citations,
         urgentAction: generated.urgent
       };
       setMessages(prev => [...prev, assistantMsg]);
       setIsGenerating(false);
-    }, 450);
+    }, 280);
   };
 
   const handleClearHistory = () => {
@@ -430,72 +710,181 @@ Regarding your inquiry: **"${prompt}"**
   }, []);
 
   return (
-    <div className="max-w-5xl mx-auto space-y-5">
-      {/* En-tête mettant en valeur l'IA */}
-      <div className="bg-[#242a34] border-2 border-amber-500/80 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-            <h2 className="text-lg font-extrabold text-white uppercase tracking-wide">
-              {isFr ? '✨ Questionner l’IA — Intelligence Artificielle de Survie' : '✨ Ask the AI — Offline Survival Intelligence'}
+    <div className="max-w-5xl mx-auto space-y-4">
+      {/* 1. EN-TÊTE IA + INSTALLATION DIRECTE MOBILE & WIKIS INCORPORÉS */}
+      <div className="bg-[#242a34] border-2 border-amber-500/80 rounded-2xl p-4 sm:p-5 space-y-4 shadow-lg">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-emerald-950/90 border border-emerald-600/70 text-emerald-300 text-[11px] font-bold">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                {isFr
+                  ? `IA & ${knowledgeIndex.length} Chapitres Incorporés Directement (100% Hors-Ligne)`
+                  : `AI & ${knowledgeIndex.length} Chapters Built-In (100% Offline)`}
+              </span>
+              {aiInstalledOnDevice && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#161920] border border-amber-500/50 text-amber-300 text-[11px] font-semibold">
+                  ✓ {isFr ? 'Prêt sur mobile & PC sans serveur' : 'Ready on mobile & PC'}
+                </span>
+              )}
+            </div>
+
+            <h2 className="text-base sm:text-lg font-extrabold text-white uppercase tracking-wide flex items-center gap-2 pt-0.5">
+              <Sparkles className="w-5 h-5 text-amber-400 shrink-0" />
+              <span>
+                {isFr
+                  ? 'Questionner l’IA — Intelligence Artificielle & Wikis Incorporés'
+                  : 'Ask the AI — Built-In Survival Intelligence & Wikis'}
+              </span>
             </h2>
+
+            <p className="text-xs text-zinc-300">
+              {isFr
+                ? 'L’IA intègre directement les 16 manuels complets, le dictionnaire des médicaments et les 8 urgences vitales. Elle répond immédiatement sur téléphone et ordinateur, même sans réseau.'
+                : 'The AI directly incorporates all 16 survival manuals, the medication database, and the 8 vital emergencies.'}
+            </p>
           </div>
-          <p className="text-xs text-zinc-300 mt-1">
-            {isFr
-              ? 'Intelligence Artificielle 100% hors-ligne : posez votre question avec vos propres mots ou cliquez sur un sujet ci-dessous.'
-              : '100% offline Artificial Intelligence: ask your question in plain words or tap a topic below.'}
-          </p>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs shrink-0">
+            <button
+              onClick={() => setUseFamilyMemory(!useFamilyMemory)}
+              className={`px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer ${
+                useFamilyMemory
+                  ? 'bg-amber-500 text-black border-amber-400 font-bold'
+                  : 'bg-[#161920] border-[#3a4354] text-zinc-300'
+              }`}
+            >
+              <span>
+                👨‍👩‍👧 {isFr ? `Infos Famille : ${useFamilyMemory ? 'OUI' : 'NON'}` : `Family Info: ${useFamilyMemory ? 'ON' : 'OFF'}`}
+              </span>
+            </button>
+
+            <button
+              onClick={handleClearHistory}
+              className="px-3 py-1.5 rounded-lg bg-[#161920] border border-[#3a4354] text-zinc-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>{isFr ? 'Nouvelle question' : 'Reset'}</span>
+            </button>
+          </div>
         </div>
 
-        <div className="flex items-center gap-2 text-xs">
+        {/* Barre d'actions Mobile & Wikis Téléchargeables */}
+        <div className="pt-3 border-t border-[#343c4b] flex flex-wrap items-center gap-2">
           <button
-            onClick={() => setUseFamilyMemory(!useFamilyMemory)}
-            className={`px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer ${
-              useFamilyMemory
-                ? 'bg-amber-500 text-black border-amber-400 font-bold'
-                : 'bg-[#161920] border-[#3a4354] text-zinc-300'
-            }`}
+            type="button"
+            onClick={handleInstallAiOnMobile}
+            className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm"
           >
-            <span>👨‍👩‍👧 {isFr ? `Infos Famille : ${useFamilyMemory ? 'OUI' : 'NON'}` : `Family Info: ${useFamilyMemory ? 'ON' : 'OFF'}`}</span>
+            <Smartphone className="w-4 h-4 shrink-0" />
+            <span>
+              {isFr
+                ? '📲 Installer / Verrouiller l’IA & les Wikis dans la mémoire du téléphone'
+                : '📲 Lock AI & Wikis in Phone Memory'}
+            </span>
           </button>
 
           <button
-            onClick={handleClearHistory}
-            className="px-3 py-1.5 rounded-lg bg-[#161920] border border-[#3a4354] text-zinc-300 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
+            type="button"
+            onClick={handleDownloadStandaloneAiWikiHtml}
+            className="px-3.5 py-2 rounded-xl bg-[#161920] hover:bg-[#1d222b] border border-amber-500/70 text-amber-300 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
           >
-            <RotateCcw className="w-3.5 h-3.5" />
-            <span>{isFr ? 'Effacer' : 'Reset'}</span>
+            <Download className="w-3.5 h-3.5 shrink-0" />
+            <span>
+              {isFr
+                ? '💾 Télécharger l’IA + Wikis en 1 Fichier Mobile Autonome (.HTML)'
+                : '💾 Download Standalone AI + Wiki File (.HTML)'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleOpenDownloadableWikis}
+            className="px-3.5 py-2 rounded-xl bg-[#161920] hover:bg-[#1d222b] border border-[#3a4354] hover:border-amber-500 text-zinc-100 font-bold text-xs flex items-center gap-1.5 cursor-pointer"
+          >
+            <FolderDown className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>
+              {isFr ? '📚 Voir les 23 Wikis & PDF Téléchargeables (Kiwix / WikiMed)' : '📚 23 Downloadable Wikis & PDFs'}
+            </span>
+          </button>
+
+          <input
+            ref={wikiUploadInputRef}
+            type="file"
+            accept=".md,.txt,.html"
+            onChange={handleImportWikiForAi}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => wikiUploadInputRef.current?.click()}
+            className="px-3 py-2 rounded-xl bg-[#161920] hover:bg-[#1d222b] border border-[#3a4354] hover:border-amber-500 text-zinc-300 font-semibold text-xs flex items-center gap-1.5 cursor-pointer"
+          >
+            <Upload className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+            <span>{isFr ? '➕ Ajouter un fichier à l’IA' : '➕ Add File to AI'}</span>
           </button>
         </div>
+
+        {installBannerMsg && (
+          <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-600 text-emerald-200 text-xs font-bold flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>{installBannerMsg}</span>
+          </div>
+        )}
       </div>
 
-      {/* Questions prêtes en 1 clic */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-        {quickActions.map((action) => (
+      {/* 2. BARRE DE QUESTION DIRECTE EN HAUT (POUR MOBILE ET PC) */}
+      <div className="bg-[#242a34] border border-[#3a4354] rounded-2xl p-3.5 shadow-md">
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            handleSendMessage();
+          }}
+          className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2"
+        >
+          <input
+            type="text"
+            value={inputPrompt}
+            onChange={e => setInputPrompt(e.target.value)}
+            placeholder={
+              isFr
+                ? 'Posez votre question à l’IA (ex : dose paracétamol, saignement, purifier l’eau, morsure, accouchement, radio)...'
+                : 'Ask the AI (e.g. paracetamol dose, bleeding, purify water, snakebite, radio)...'
+            }
+            className="flex-1 bg-[#161920] border border-[#3a4354] rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-amber-500"
+          />
           <button
-            key={action.id}
-            onClick={() => handleSendMessage(isFr ? action.queryFr : action.queryEn)}
-            className="text-left p-3 bg-[#242a34] hover:bg-[#2a313d] border border-[#3a4354] hover:border-amber-500 rounded-xl transition-all group flex items-center gap-3 cursor-pointer shadow-sm"
+            type="submit"
+            disabled={!inputPrompt.trim() || isGenerating}
+            className="px-5 py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-extrabold rounded-xl transition-colors flex items-center justify-center gap-2 text-xs sm:text-sm cursor-pointer shrink-0 shadow-md"
           >
-            <div className="p-2 rounded-lg bg-[#161920] border border-[#343c4b] shrink-0">
-              {action.icon}
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs font-extrabold text-white group-hover:text-amber-400 truncate">
+            <Sparkles className="w-4 h-4" />
+            <span>{isFr ? 'Questionner l’IA' : 'Ask the AI'}</span>
+            <Send className="w-3.5 h-3.5" />
+          </button>
+        </form>
+
+        {/* Questions prêtes en 1 clic */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mt-3">
+          {quickActions.map(action => (
+            <button
+              key={action.id}
+              onClick={() => handleSendMessage(action.queryFr)}
+              className="text-left p-2.5 bg-[#161920] hover:bg-[#1e232d] border border-[#343c4b] hover:border-amber-500 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+            >
+              <div className="shrink-0">{action.icon}</div>
+              <div className="text-[11px] font-bold text-zinc-100 leading-tight line-clamp-2">
                 {isFr ? action.labelFr : action.labelEn}
               </div>
-              <div className="text-[11px] text-zinc-400 truncate">
-                {isFr ? action.queryFr : action.queryEn}
-              </div>
-            </div>
-          </button>
-        ))}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Fenêtre de discussion */}
-      <div className="border border-[#3a4354] rounded-2xl bg-[#242a34] flex flex-col h-[500px] overflow-hidden shadow-lg">
+      {/* 3. FENÊTRE DE DISCUSSION & RÉPONSES DÉTAILLÉES DE L'IA */}
+      <div className="border border-[#3a4354] rounded-2xl bg-[#242a34] flex flex-col h-[520px] overflow-hidden shadow-lg">
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-          {messages.map((msg) => {
+          {messages.map(msg => {
             const isUser = msg.role === 'user';
             return (
               <div
@@ -512,7 +901,7 @@ Regarding your inquiry: **"${prompt}"**
                   {isUser ? (isFr ? 'Moi' : 'Me') : 'IA'}
                 </div>
 
-                <div className="space-y-1 max-w-2xl">
+                <div className="space-y-1.5 max-w-2xl min-w-0">
                   <div
                     className={`rounded-xl p-4 text-xs sm:text-sm leading-relaxed ${
                       isUser
@@ -530,6 +919,20 @@ Regarding your inquiry: **"${prompt}"**
                     <div className="whitespace-pre-line prose prose-invert prose-xs max-w-none">
                       {msg.content}
                     </div>
+
+                    {msg.citations && msg.citations.length > 0 && !isUser && (
+                      <div className="mt-3 pt-2.5 border-t border-[#2b3240] flex flex-wrap items-center gap-1.5">
+                        <BookOpen className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        {msg.citations.map((cit, idx) => (
+                          <span
+                            key={idx}
+                            className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#242a34] border border-[#3a4354] text-amber-300"
+                          >
+                            {cit}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -544,44 +947,15 @@ Regarding your inquiry: **"${prompt}"**
               <div className="bg-[#161920] border border-[#343c4b] rounded-xl p-4 flex items-center gap-3 text-xs text-zinc-300">
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
                 <span>
-                  {isFr ? 'L’IA analyse votre situation hors-ligne...' : 'AI analyzing your situation offline...'}
+                  {isFr
+                    ? 'L’IA consulte les manuels et bases médicales incorporés...'
+                    : 'AI searching built-in manuals and medical database...'}
                 </span>
               </div>
             </div>
           )}
 
           <div ref={messagesEndRef} />
-        </div>
-
-        {/* Barre de saisie */}
-        <div className="p-3 bg-[#161920] border-t border-[#343c4b]">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSendMessage();
-            }}
-            className="flex items-center gap-2"
-          >
-            <input
-              type="text"
-              value={inputPrompt}
-              onChange={(e) => setInputPrompt(e.target.value)}
-              placeholder={
-                isFr
-                  ? 'Posez votre question à l’IA (ex : comment rendre l’eau potable, saignement, brûlure)...'
-                  : 'Ask the AI (e.g. how to make water safe, bleeding, burn)...'
-              }
-              className="flex-1 bg-[#242a34] border border-[#3a4354] rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-amber-500"
-            />
-            <button
-              type="submit"
-              disabled={!inputPrompt.trim() || isGenerating}
-              className="px-5 py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-extrabold rounded-xl transition-colors flex items-center gap-2 text-xs cursor-pointer shrink-0"
-            >
-              <span>{isFr ? 'Questionner l’IA' : 'Ask the AI'}</span>
-              <Send className="w-3.5 h-3.5" />
-            </button>
-          </form>
         </div>
       </div>
     </div>

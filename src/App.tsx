@@ -69,7 +69,7 @@ export default function App() {
         )}
 
         {currentTab === 'survival-llm' && (
-          <SurvivalLLM language={language} />
+          <SurvivalLLM language={language} onNavigate={setCurrentTab} />
         )}
 
         {currentTab === 'blackout' && (
