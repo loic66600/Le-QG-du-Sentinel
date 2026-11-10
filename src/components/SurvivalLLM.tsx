@@ -419,188 +419,106 @@ Regarding your inquiry: **"${prompt}"**
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header with Model and Status Controls */}
-      <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-5xl mx-auto space-y-5">
+      {/* En-tête épuré et rassurant */}
+      <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <h2 className="text-lg font-bold text-white flex items-center gap-2">
-              <span>{isFr ? 'Conseiller IA Survie — Moteur Embarqué' : 'Survival AI Advisor — Local Engine'}</span>
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+            <h2 className="text-lg font-extrabold text-white">
+              {isFr ? '💬 Poser une Question (Assistant 100% Hors-Ligne)' : '💬 Ask a Question (100% Offline Assistant)'}
             </h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-stone-400 mt-1">
             {isFr
-              ? 'Inférence 100% hors-ligne connectée à votre Fiche Médicale Familiale (allergies, enfants, ralliement).'
-              : '100% offline inference connected to your Family Medical Memory (allergies, children, rally point).'}
+              ? 'Posez votre question avec vos propres mots ou cliquez sur une situation ci-dessous.'
+              : 'Ask your question in plain words or tap a situation below.'}
           </p>
         </div>
 
-        {/* Engine Hardware and Mode Bar */}
-        <div className="flex flex-wrap items-center gap-2.5 text-xs font-mono">
+        <div className="flex items-center gap-2 text-xs">
           <button
             onClick={() => setUseFamilyMemory(!useFamilyMemory)}
             className={`px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer ${
               useFamilyMemory
                 ? 'bg-amber-950/70 border-amber-500 text-amber-300 font-bold'
-                : 'bg-slate-950 border-slate-800 text-slate-400'
+                : 'bg-black border-neutral-800 text-stone-400'
             }`}
-            title={
-              isFr
-                ? 'Activer/Désactiver l’injection automatique de votre Fiche Médicale Familiale dans les réponses'
-                : 'Toggle automatic Family Memory injection'
-            }
           >
-            <span>🧠 {isFr ? `Mémoire Familiale : ${useFamilyMemory ? 'ACTIVE' : 'OFF'}` : `Family Memory: ${useFamilyMemory ? 'ON' : 'OFF'}`}</span>
-          </button>
-
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-300">
-            <Cpu className="w-3.5 h-3.5 text-amber-500" />
-            <select
-              value={selectedModel}
-              onChange={(e) => setSelectedModel(e.target.value as any)}
-              className="bg-transparent text-amber-400 focus:outline-none cursor-pointer"
-            >
-              <option value="llama3.2:3b">Llama 3.2 3B (q4_K_M)</option>
-              <option value="phi3:mini">Phi-3 Mini 3.8B</option>
-              <option value="smollm2:1.7b">SmolLM2 1.7B (Basse RAM)</option>
-            </select>
-          </div>
-
-          <button
-            onClick={() => setUseLiveOllama(!useLiveOllama)}
-            className={`px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 ${
-              useLiveOllama
-                ? 'bg-emerald-950/60 border-emerald-700 text-emerald-300'
-                : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'
-            }`}
-            title={isFr ? 'Tenter une connexion réelle vers Ollama sur le port 11434' : 'Connect to live Ollama on port 11434'}
-          >
-            <span className={`w-2 h-2 rounded-full ${useLiveOllama ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
-            <span>{useLiveOllama ? 'OLLAMA LIVE' : 'EMBEDDED AIR-GAP'}</span>
+            <span>👨‍👩‍👧 {isFr ? `Infos Famille : ${useFamilyMemory ? 'OUI' : 'NON'}` : `Family Info: ${useFamilyMemory ? 'ON' : 'OFF'}`}</span>
           </button>
 
           <button
             onClick={handleClearHistory}
-            className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-400 hover:text-rose-400 hover:border-rose-900/50 transition-colors"
-            title={isFr ? 'Réinitialiser la conversation' : 'Reset chat'}
+            className="px-3 py-1.5 rounded-lg bg-black border border-neutral-800 text-stone-400 hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5" />
+            <span>{isFr ? 'Effacer' : 'Reset'}</span>
           </button>
         </div>
       </div>
 
-      {/* Connected Family Memory Summary Banner (Proposition 2) */}
-      {useFamilyMemory && (
-        <div className="bg-neutral-950 border border-amber-700/50 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
-          <div className="flex flex-wrap items-center gap-3 text-stone-300">
-            <span className="text-amber-400 font-bold">🧠 MÉMOIRE DU FOYER :</span>
-            <span>👥 {familyProfile.householdMembers}</span>
-            <span className="text-neutral-700">|</span>
-            <span className="text-rose-300">🩸 {familyProfile.bloodTypes}</span>
-            <span className="text-neutral-700">|</span>
-            <span className="text-emerald-300">💊 {familyProfile.allergiesAndMeds}</span>
-          </div>
-          <span className="text-[10px] text-stone-400">
-            {isFr ? 'Modifiable dans Paramètres' : 'Editable in Settings'}
-          </span>
-        </div>
-      )}
-
-      {/* Quick Action Triage Bar */}
-      <div className="space-y-2">
-        <span className="text-[11px] font-mono text-slate-400 uppercase tracking-wider">
-          {isFr ? 'Actions de Triage d’Urgence en 1 Clic :' : 'Immediate Emergency Triage Actions:'}
-        </span>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-          {quickActions.map((action) => (
-            <button
-              key={action.id}
-              onClick={() => handleSendMessage(isFr ? action.queryFr : action.queryEn)}
-              className="text-left p-2.5 bg-slate-900/70 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 rounded-lg transition-all group flex items-start gap-2.5"
-            >
-              <div className="p-1 rounded bg-slate-950 border border-slate-800 group-hover:border-slate-700 shrink-0 mt-0.5">
-                {action.icon}
+      {/* Questions prêtes en 1 clic */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+        {quickActions.map((action) => (
+          <button
+            key={action.id}
+            onClick={() => handleSendMessage(isFr ? action.queryFr : action.queryEn)}
+            className="text-left p-3 bg-neutral-950 hover:bg-neutral-900 border border-neutral-800 hover:border-amber-500 rounded-xl transition-all group flex items-center gap-3 cursor-pointer"
+          >
+            <div className="p-2 rounded-lg bg-black border border-neutral-800 shrink-0">
+              {action.icon}
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-extrabold text-white group-hover:text-amber-400 truncate">
+                {isFr ? action.labelFr : action.labelEn}
               </div>
-              <div className="truncate">
-                <div className="text-xs font-semibold text-slate-200 group-hover:text-amber-400 transition-colors truncate">
-                  {isFr ? action.labelFr : action.labelEn}
-                </div>
-                <div className="text-[11px] text-slate-400 truncate">
-                  {isFr ? action.queryFr : action.queryEn}
-                </div>
+              <div className="text-[11px] text-stone-400 truncate">
+                {isFr ? action.queryFr : action.queryEn}
               </div>
-            </button>
-          ))}
-        </div>
+            </div>
+          </button>
+        ))}
       </div>
 
-      {/* Main Chat Display Window */}
-      <div className="border border-slate-800 rounded-xl bg-slate-950 flex flex-col h-[520px] overflow-hidden">
-        {/* Messages Stream */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
+      {/* Fenêtre de discussion */}
+      <div className="border border-neutral-800 rounded-xl bg-neutral-950 flex flex-col h-[500px] overflow-hidden">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
           {messages.map((msg) => {
             const isUser = msg.role === 'user';
             return (
               <div
                 key={msg.id}
-                className={`flex gap-3 max-w-4xl ${isUser ? 'ml-auto flex-row-reverse' : ''}`}
+                className={`flex gap-3 max-w-3xl ${isUser ? 'ml-auto flex-row-reverse' : ''}`}
               >
-                {/* Avatar Icon */}
                 <div
-                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold font-mono ${
+                  className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold ${
                     isUser
-                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-400'
-                      : 'bg-slate-900 border border-slate-800 text-slate-300'
+                      ? 'bg-amber-500 text-black'
+                      : 'bg-black border border-neutral-700 text-amber-400'
                   }`}
                 >
-                  {isUser ? 'YOU' : 'AI'}
+                  {isUser ? (isFr ? 'Moi' : 'Me') : 'QG'}
                 </div>
 
-                {/* Message Body */}
-                <div className="space-y-1.5 max-w-2xl">
-                  <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
-                    <span>{isUser ? (isFr ? 'Vous' : 'Operator') : 'Sentinel Survival Core'}</span>
-                    <span>·</span>
-                    <span className="tabular-nums">{msg.timestamp}</span>
-                  </div>
-
+                <div className="space-y-1 max-w-2xl">
                   <div
                     className={`rounded-xl p-4 text-xs sm:text-sm leading-relaxed ${
                       isUser
-                        ? 'bg-amber-500/10 border border-amber-500/20 text-slate-100'
-                        : 'bg-slate-900/90 border border-slate-800/80 text-slate-200'
+                        ? 'bg-amber-500/15 border border-amber-500/40 text-white'
+                        : 'bg-black border border-neutral-800 text-stone-200'
                     }`}
                   >
-                    {/* Urgent Action Highlight Badge */}
                     {msg.urgentAction && (
-                      <div className="mb-3 p-2 bg-rose-950/60 border border-rose-800/60 rounded-md text-xs text-rose-300 flex items-center gap-2 font-mono">
+                      <div className="mb-3 p-2.5 bg-rose-950/70 border border-rose-700 rounded-lg text-xs text-rose-200 flex items-center gap-2 font-bold">
                         <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
-                        <span><strong>{isFr ? 'GESTES PRIORITAIRES :' : 'PRIORITY ACTION:'}</strong> {msg.urgentAction}</span>
+                        <span>{msg.urgentAction}</span>
                       </div>
                     )}
 
-                    {/* Formatted Content */}
                     <div className="whitespace-pre-line prose prose-invert prose-xs max-w-none">
                       {msg.content}
                     </div>
-
-                    {/* Citations Footer */}
-                    {msg.citations && msg.citations.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-wrap items-center gap-2 text-[10px] font-mono text-slate-400">
-                        <span className="text-amber-500/80 uppercase font-semibold">
-                          {isFr ? 'Sources vérifiées :' : 'Verified Sources:'}
-                        </span>
-                        {msg.citations.map((cite, i) => (
-                          <span
-                            key={i}
-                            className="px-1.5 py-0.5 rounded bg-slate-950 border border-slate-800 text-slate-300"
-                          >
-                            {cite}
-                          </span>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -608,16 +526,14 @@ Regarding your inquiry: **"${prompt}"**
           })}
 
           {isGenerating && (
-            <div className="flex gap-3 max-w-2xl">
-              <div className="w-8 h-8 rounded-lg bg-slate-900 border border-slate-800 flex items-center justify-center shrink-0 text-xs font-mono text-amber-500">
-                AI
+            <div className="flex gap-3 max-w-xl">
+              <div className="w-8 h-8 rounded-lg bg-black border border-neutral-700 flex items-center justify-center shrink-0 text-xs font-bold text-amber-400">
+                QG
               </div>
-              <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex items-center gap-3 text-xs text-slate-400">
+              <div className="bg-black border border-neutral-800 rounded-xl p-4 flex items-center gap-3 text-xs text-stone-300">
                 <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
                 <span>
-                  {isFr
-                    ? 'Inférence locale en cours (recherche dans les guides d’urgence)...'
-                    : 'Local inference running (evaluating emergency field guides)...'}
+                  {isFr ? 'Recherche de la marche à suivre...' : 'Looking up guidance...'}
                 </span>
               </div>
             </div>
@@ -626,8 +542,8 @@ Regarding your inquiry: **"${prompt}"**
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Bar */}
-        <div className="p-3 bg-slate-900/80 border-t border-slate-800">
+        {/* Barre de saisie */}
+        <div className="p-3 bg-black border-t border-neutral-800">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -641,17 +557,17 @@ Regarding your inquiry: **"${prompt}"**
               onChange={(e) => setInputPrompt(e.target.value)}
               placeholder={
                 isFr
-                  ? 'Posez une question de survie (ex: purification d’eau, fracture, poison, radio)...'
-                  : 'Ask a survival question (e.g. water disinfection, fracture, plant toxins, radio nets)...'
+                  ? 'Écrivez votre question ici (ex : comment rendre l’eau potable, saignement, brûlure)...'
+                  : 'Type your question here (e.g. how to make water safe, bleeding, burn)...'
               }
-              className="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-4 py-2.5 text-xs sm:text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-amber-500"
+              className="flex-1 bg-neutral-950 border border-neutral-700 rounded-xl px-4 py-3 text-xs sm:text-sm text-white placeholder-stone-500 focus:outline-none focus:border-amber-500"
             />
             <button
               type="submit"
               disabled={!inputPrompt.trim() || isGenerating}
-              className="px-4 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 disabled:hover:bg-amber-500 text-slate-950 font-bold rounded-lg transition-colors flex items-center gap-2 text-xs"
+              className="px-5 py-3 bg-amber-500 hover:bg-amber-400 disabled:opacity-50 text-black font-extrabold rounded-xl transition-colors flex items-center gap-2 text-xs cursor-pointer"
             >
-              <span>{isFr ? 'Envoyer' : 'Send'}</span>
+              <span>{isFr ? 'Demander' : 'Ask'}</span>
               <Send className="w-3.5 h-3.5" />
             </button>
           </form>

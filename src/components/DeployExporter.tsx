@@ -166,6 +166,17 @@ export const DeployExporter: React.FC<DeployExporterProps> = ({ language }) => {
 
   useEffect(() => {
     try {
+      const targetUrgency = sessionStorage.getItem('sentinel_open_urgency_id');
+      if (targetUrgency) {
+        setMainSection('first-aid');
+        setSelectedUrgencyId(targetUrgency);
+        sessionStorage.removeItem('sentinel_open_urgency_id');
+      }
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
       localStorage.setItem(STORAGE_KEY_INSTALLED, JSON.stringify(installedIds));
     } catch {}
   }, [installedIds]);
@@ -639,119 +650,102 @@ export const DeployExporter: React.FC<DeployExporterProps> = ({ language }) => {
 
   return (
     <div className="space-y-6 min-w-0">
-      {/* 1. DOCUMENTATION D'URGENCE HEADER & 4 UNIFIED TABS */}
-      <div className="border border-neutral-800 rounded-lg overflow-hidden bg-neutral-950">
-        <div className="bg-[#232718] border-b border-neutral-800 px-5 py-4 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5 min-w-0">
-            <div className="w-11 h-11 rounded-lg bg-black/60 border border-amber-500/60 flex items-center justify-center text-amber-400 shrink-0">
-              <BookOpen className="w-5 h-5" />
+      {/* 1. EN-TÊTE ÉPURÉ : SECOURS, MÉDICAMENTS & GUIDES PRATIQUES */}
+      <div className="border border-neutral-800 rounded-xl overflow-hidden bg-neutral-950">
+        <div className="bg-black border-b border-neutral-800 px-5 py-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-rose-400 shrink-0">
+              <HeartPulse className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-lg sm:text-xl font-extrabold text-white tracking-wider uppercase font-mono">
-                  {isFr ? 'DOCUMENTATION D’URGENCE' : 'EMERGENCY DOCUMENTATION'}
-                </h1>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-600 text-white font-bold">
-                  SECOURS · MANUELS · 72H
-                </span>
-              </div>
-              <p className="text-xs text-stone-300 mt-0.5">
+              <h1 className="text-base sm:text-lg font-extrabold text-white uppercase">
+                {isFr ? 'Secours, Médicaments & Guides Pratiques' : 'First Aid, Medications & Practical Guides'}
+              </h1>
+              <p className="text-xs text-stone-400">
                 {isFr
-                  ? 'Premiers secours complets (8 urgences vitales), 16 manuels mis en page, calculateur & sac 72h, et archives officielles.'
-                  : 'Complete first aid (8 vital emergencies), 16 formatted manuals, 72h bag & calculator, and official archives.'}
+                  ? 'Cliquez sur une rubrique ci-dessous (tout est disponible sans Internet).'
+                  : 'Select a category below (everything works offline).'}
               </p>
             </div>
           </div>
 
-          {/* 7 Unified Navigation Tabs */}
+          {/* Onglets simples et clairs */}
           <div className="flex flex-wrap items-center gap-1.5 shrink-0">
             <button
               onClick={() => setMainSection('first-aid')}
-              className={`px-3 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
+              className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
                 mainSection === 'first-aid'
                   ? 'bg-rose-600 text-white'
-                  : 'bg-black/60 text-stone-300 hover:text-white border border-neutral-700'
+                  : 'bg-neutral-900 text-stone-300 hover:text-white border border-neutral-800'
               }`}
             >
               <HeartPulse className="w-3.5 h-3.5" />
-              <span>{isFr ? 'Premiers Secours (8)' : 'First Aid (8)'}</span>
+              <span>{isFr ? '🚑 Premiers Secours (8)' : '🚑 First Aid (8)'}</span>
             </button>
 
             <button
               onClick={() => setMainSection('drugs')}
-              className={`px-3 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
+              className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
                 mainSection === 'drugs'
                   ? 'bg-amber-500 text-black'
-                  : 'bg-black/60 text-stone-300 hover:text-white border border-neutral-700'
+                  : 'bg-neutral-900 text-stone-300 hover:text-white border border-neutral-800'
               }`}
             >
               <Pill className="w-3.5 h-3.5" />
-              <span>{isFr ? 'Médicaments & Interactions' : 'Drugs & Interactions'}</span>
+              <span>{isFr ? '💊 Médicaments & Doses' : '💊 Medications'}</span>
             </button>
 
             <button
               onClick={() => setMainSection('local-manuals')}
-              className={`px-3 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
+              className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
                 mainSection === 'local-manuals'
                   ? 'bg-amber-500 text-black'
-                  : 'bg-black/60 text-stone-300 hover:text-white border border-neutral-700'
+                  : 'bg-neutral-900 text-stone-300 hover:text-white border border-neutral-800'
               }`}
             >
               <BookOpen className="w-3.5 h-3.5" />
-              <span>{isFr ? 'Manuels Mis en Page (16)' : 'Manuals (16)'}</span>
+              <span>{isFr ? '📖 16 Guides Pratiques' : '📖 16 Guides'}</span>
             </button>
 
             <button
               onClick={() => setMainSection('tools-72h')}
-              className={`px-3 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
+              className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
                 mainSection === 'tools-72h'
                   ? 'bg-amber-500 text-black'
-                  : 'bg-black/60 text-stone-300 hover:text-white border border-neutral-700'
+                  : 'bg-neutral-900 text-stone-300 hover:text-white border border-neutral-800'
               }`}
             >
               <Calculator className="w-3.5 h-3.5" />
-              <span>{isFr ? 'Sac 72h & Calculateur' : '72h Bag & Calc'}</span>
+              <span>{isFr ? '🎒 Sac 72h & Eau' : '🎒 72h Bag & Water'}</span>
             </button>
 
             <button
               onClick={() => setMainSection('evac-risk')}
-              className={`px-3 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
+              className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
                 mainSection === 'evac-risk'
                   ? 'bg-emerald-500 text-black'
-                  : 'bg-black/60 text-stone-300 hover:text-white border border-neutral-700'
+                  : 'bg-neutral-900 text-stone-300 hover:text-white border border-neutral-800'
               }`}
             >
               <Scale className="w-3.5 h-3.5" />
-              <span>{isFr ? 'Confinement vs Évacuer' : 'Shelter vs Evac'}</span>
+              <span>{isFr ? '🏠 Rester ou Évacuer' : '🏠 Shelter vs Evac'}</span>
             </button>
 
             <button
               onClick={() => setMainSection('sos-morse')}
-              className={`px-3 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
+              className={`px-3 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
                 mainSection === 'sos-morse'
                   ? 'bg-amber-500 text-black'
-                  : 'bg-black/60 text-stone-300 hover:text-white border border-neutral-700'
+                  : 'bg-neutral-900 text-stone-300 hover:text-white border border-neutral-800'
               }`}
             >
               <Sun className="w-3.5 h-3.5" />
-              <span>{isFr ? 'Morse & SOS Flash/Son' : 'Morse & SOS Beacon'}</span>
-            </button>
-
-            <button
-              onClick={() => setMainSection('external-catalog')}
-              className={`px-3 py-2 rounded-md text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-colors ${
-                mainSection === 'external-catalog'
-                  ? 'bg-amber-500 text-black'
-                  : 'bg-black/60 text-stone-300 hover:text-white border border-neutral-700'
-              }`}
-            >
-              <Globe className="w-3.5 h-3.5" />
-              <span>{isFr ? 'Archives PDF / ZIM & Kiwix' : 'PDF / ZIM & Kiwix'}</span>
+              <span>{isFr ? '🔦 Signal SOS' : '🔦 SOS Beacon'}</span>
             </button>
           </div>
         </div>
 
-        {/* Search & Quick Action Bar */}
+        {/* Barre de recherche simple */}
         {['first-aid', 'local-manuals', 'external-catalog'].includes(mainSection) && (
           <div className="p-4 space-y-3 bg-neutral-950">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
@@ -763,37 +757,31 @@ export const DeployExporter: React.FC<DeployExporterProps> = ({ language }) => {
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder={
                     isFr
-                      ? 'Rechercher une urgence ou un manuel (ex : malaise cardiaque, inconscience, étouffement, brûlure, noyade, morsure, eau)...'
-                      : 'Search emergency or manual (e.g. cardiac, unconscious, choking, burn, drowning, bite, water)...'
+                      ? 'Rechercher (ex : saignement, brûlure, étouffement, eau, froid)...'
+                      : 'Search (e.g. bleeding, burn, choking, water, cold)...'
                   }
-                  className="w-full pl-10 pr-4 py-2.5 bg-black border border-neutral-700 focus:border-amber-500 rounded-md text-xs sm:text-sm text-white placeholder-stone-500 outline-none"
+                  className="w-full pl-10 pr-4 py-2.5 bg-black border border-neutral-700 focus:border-amber-500 rounded-lg text-xs sm:text-sm text-white placeholder-stone-500 outline-none"
                 />
               </div>
 
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".md,.txt,.html"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="px-3.5 py-2.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-stone-200 rounded-md text-xs font-medium flex items-center gap-1.5 cursor-pointer"
-                >
-                  <Upload className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>{isFr ? 'Importer un fichier' : 'Import File'}</span>
-                </button>
-
-                <button
-                  onClick={handleDownloadAllPacks}
-                  className="px-3.5 py-2.5 bg-[#343b24] hover:bg-[#414a2d] border border-amber-500/50 text-amber-100 rounded-md text-xs font-bold flex items-center gap-1.5 cursor-pointer"
-                >
-                  <FolderDown className="w-3.5 h-3.5 text-amber-300" />
-                  <span>{isFr ? 'Télécharger Tout (HTML)' : 'Download All (HTML)'}</span>
-                </button>
-              </div>
+              {mainSection === 'local-manuals' && (
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".md,.txt,.html"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={handleDownloadAllPacks}
+                    className="px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-black rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <FolderDown className="w-3.5 h-3.5" />
+                    <span>{isFr ? 'Télécharger les 16 Guides' : 'Download All 16 Guides'}</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Filter Pills per Active Tab */}

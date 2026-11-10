@@ -1379,118 +1379,193 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
 
   return (
     <div className="space-y-4 min-w-0">
-      {/* 1. COMPACT TOP BAR WITH FRENCH REGION DROPDOWN SELECTOR */}
-      <div className="bg-neutral-950 border border-neutral-800 rounded-md p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3 min-w-0">
-          <div className="flex items-center gap-2 shrink-0">
-            <Compass className="w-5 h-5 text-amber-400 shrink-0" />
-            <div>
-              <h2 className="text-sm sm:text-base font-bold text-white uppercase tracking-wide">
-                {isFr ? 'Carte Tactique & Régions de France' : 'France Tactical Map & Regions'}
-              </h2>
-              <p className="text-[11px] text-stone-400">
-                {isFr
-                  ? 'Repères réels vérifiés (CHU, refuges FFCAM, sources, émetteurs TDF) · Zéro point fictif'
-                  : 'Verified real landmarks (Hospitals, FFCAM refuges, springs, TDF relays) · Zero fictional points'}
-              </p>
+      {/* 1. BARRE UNIQUE ET ÉPURÉE : CHOIX DE LA ZONE + FILTRES CLAIRS + APPARENCE */}
+      <div className="bg-neutral-950 border border-neutral-800 rounded-xl p-4 space-y-3">
+        {/* Ligne 1 : Région + Localisation GPS + Couleur/Sombre + Outils */}
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
+            <div className="flex items-center gap-2 bg-black border border-amber-500/70 rounded-lg px-3 py-2 min-w-0">
+              <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
+              <select
+                id="region-select"
+                value={selectedRegionId}
+                onChange={(e) => handleSelectRegion(e.target.value)}
+                className="bg-black text-white text-xs sm:text-sm font-bold focus:outline-none cursor-pointer truncate max-w-[240px] sm:max-w-[320px]"
+              >
+                {FRENCH_REGIONS.map(reg => (
+                  <option key={reg.id} value={reg.id} className="bg-neutral-950 text-white">
+                    {isFr ? reg.nameFr : reg.nameEn}
+                  </option>
+                ))}
+              </select>
             </div>
+
+            <button
+              onClick={() => handleSelectRegion('dept-66')}
+              className={`px-3 py-2 rounded-lg text-xs font-bold border cursor-pointer ${
+                selectedRegionId === 'dept-66'
+                  ? 'bg-amber-500 text-black border-amber-400'
+                  : 'bg-neutral-900 hover:bg-neutral-800 text-amber-300 border-amber-600/50'
+              }`}
+            >
+              📍 {isFr ? 'Dépt 66' : 'Dept 66'}
+            </button>
+
+            <button
+              onClick={handleLocateMe}
+              disabled={gpsTracking}
+              className="px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 cursor-pointer"
+            >
+              <Locate className="w-3.5 h-3.5" />
+              <span>{gpsTracking ? 'GPS...' : isFr ? 'Autour de moi (GPS)' : 'Near Me (GPS)'}</span>
+            </button>
           </div>
 
-          {/* FRENCH REGIONS DROPDOWN MENU */}
-          <div className="flex items-center gap-2 bg-black border border-amber-500/60 rounded-sm px-2.5 py-1.5 min-w-0">
-            <MapPin className="w-4 h-4 text-amber-400 shrink-0" />
-            <label htmlFor="region-select" className="text-[11px] font-mono text-amber-300 font-bold whitespace-nowrap">
-              {isFr ? 'Région :' : 'Region:'}
-            </label>
-            <select
-              id="region-select"
-              value={selectedRegionId}
-              onChange={(e) => handleSelectRegion(e.target.value)}
-              className="bg-black text-white text-xs font-mono font-bold focus:outline-none cursor-pointer truncate max-w-[230px] sm:max-w-[280px]"
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Sélecteur Couleur / Sombre / Nuit */}
+            <div className="flex items-center bg-black border border-neutral-800 rounded-lg p-1 gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setMapTheme('organic');
+                  setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold cursor-pointer ${
+                  mapTheme === 'organic'
+                    ? 'bg-amber-500 text-black'
+                    : 'text-stone-300 hover:text-white'
+                }`}
+              >
+                🗺️ {isFr ? 'Couleur' : 'Color'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMapTheme('tactical-oled');
+                  setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold cursor-pointer ${
+                  mapTheme === 'tactical-oled'
+                    ? 'bg-amber-500 text-black'
+                    : 'text-stone-300 hover:text-white'
+                }`}
+              >
+                🌑 {isFr ? 'Sombre' : 'Dark'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMapTheme('red-night');
+                  setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
+                }}
+                className={`px-2.5 py-1 rounded-md text-xs font-bold cursor-pointer ${
+                  mapTheme === 'red-night'
+                    ? 'bg-rose-600 text-white'
+                    : 'text-stone-300 hover:text-white'
+                }`}
+              >
+                🔴 {isFr ? 'Nuit' : 'Night'}
+              </button>
+            </div>
+
+            <button
+              onClick={() => {
+                setIsAddingPoint(!isAddingPoint);
+                setSidebarTab('inspector');
+              }}
+              className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
             >
-              {FRENCH_REGIONS.map(reg => (
-                <option key={reg.id} value={reg.id} className="bg-neutral-950 text-white">
-                  {isFr ? reg.nameFr : reg.nameEn}
-                </option>
-              ))}
-            </select>
+              <Plus className="w-3.5 h-3.5" />
+              <span>{isFr ? 'Ajouter un lieu' : 'Add Point'}</span>
+            </button>
+
+            <button
+              onClick={() => setIsPlacementPanelOpen(!isPlacementPanelOpen)}
+              className={`px-2.5 py-2 text-xs rounded-lg border cursor-pointer ${
+                isPlacementPanelOpen || isTriangulating
+                  ? 'bg-neutral-800 text-amber-300 border-amber-500'
+                  : 'bg-black text-stone-400 hover:text-white border-neutral-800'
+              }`}
+            >
+              🛠️ {isFr ? 'Plus d’outils' : 'More Tools'}
+            </button>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <button
-            onClick={handleLocateMe}
-            disabled={gpsTracking}
-            className="px-2.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-sky-300 font-mono text-xs rounded-sm flex items-center gap-1.5 cursor-pointer"
-          >
-            <Locate className="w-3.5 h-3.5" />
-            <span>{gpsTracking ? 'GPS...' : 'GPS'}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsPlacementPanelOpen(!isPlacementPanelOpen);
-              setIsTriangulating(false);
-            }}
-            className={`px-2.5 py-1.5 font-mono text-xs rounded-sm border flex items-center gap-1.5 cursor-pointer ${
-              isPlacementPanelOpen
-                ? 'bg-sky-500 text-black border-sky-400 font-bold'
-                : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-stone-200'
-            }`}
-          >
-            <Target className="w-3.5 h-3.5" />
-            <span>{isFr ? 'Ma Position' : 'Set Pos'}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsTriangulating(!isTriangulating);
-              setIsPlacementPanelOpen(false);
-            }}
-            className={`px-2.5 py-1.5 font-mono text-xs rounded-sm border flex items-center gap-1.5 cursor-pointer ${
-              isTriangulating
-                ? 'bg-emerald-500 text-black border-emerald-400 font-bold'
-                : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-700 text-emerald-300'
-            }`}
-          >
-            <Triangle className="w-3.5 h-3.5" />
-            <span>{isFr ? 'Boussole / Sans GPS' : 'No-GPS Fix'}</span>
-          </button>
-
-          <button
-            onClick={() => {
-              setIsAddingPoint(!isAddingPoint);
-              setSidebarTab('inspector');
-            }}
-            className="px-2.5 py-1.5 bg-amber-500 hover:bg-amber-400 text-black font-mono font-bold text-xs rounded-sm flex items-center gap-1 cursor-pointer"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>{isFr ? 'Ajouter Repère' : 'Add Point'}</span>
-          </button>
-
-          <button
-            onClick={handleExportGpx}
-            className="px-2.5 py-1.5 bg-neutral-900 hover:bg-neutral-800 text-stone-300 border border-neutral-700 font-mono text-xs rounded-sm flex items-center gap-1 cursor-pointer"
-            title="Exporter GPX"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>GPX</span>
-          </button>
+        {/* Ligne 2 : Gros boutons filtres simples en 1 clic */}
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-neutral-800/80">
+          {[
+            { id: 'all', label: isFr ? `Tout voir (${allWaypoints.length})` : `All (${allWaypoints.length})` },
+            {
+              id: 'water',
+              label: isFr
+                ? `💧 Eau Potable (${allWaypoints.filter(w => w.type === 'water').length})`
+                : `💧 Drinking Water (${allWaypoints.filter(w => w.type === 'water').length})`
+            },
+            {
+              id: 'lakes',
+              label: isFr
+                ? `🌊 Lacs & Plans d’Eau (${allWaypoints.filter(w => isLakeOrWaterbody(w)).length})`
+                : `🌊 Lakes (${allWaypoints.filter(w => isLakeOrWaterbody(w)).length})`
+            },
+            {
+              id: 'water-raw',
+              label: isFr
+                ? `🚰 Sources & Puits (${allWaypoints.filter(w => w.type === 'water-raw').length})`
+                : `🚰 Springs (${allWaypoints.filter(w => w.type === 'water-raw').length})`
+            },
+            {
+              id: 'medical',
+              label: isFr
+                ? `🏥 Hôpitaux & Cliniques (${allWaypoints.filter(w => w.type === 'medical').length})`
+                : `🏥 Hospitals (${allWaypoints.filter(w => w.type === 'medical').length})`
+            },
+            {
+              id: 'camp',
+              label: isFr
+                ? `🌲 Forêts (${allWaypoints.filter(w => w.type === 'camp').length})`
+                : `🌲 Forests (${allWaypoints.filter(w => w.type === 'camp').length})`
+            },
+            {
+              id: 'radio',
+              label: isFr
+                ? `📡 Émetteurs TDF (${allWaypoints.filter(w => w.type === 'radio').length})`
+                : `📡 Radio TDF (${allWaypoints.filter(w => w.type === 'radio').length})`
+            },
+            {
+              id: 'shelter',
+              label: isFr
+                ? `🏕️ Refuges (${allWaypoints.filter(w => w.type === 'shelter').length})`
+                : `🏕️ Refuges (${allWaypoints.filter(w => w.type === 'shelter').length})`
+            }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveFilter(tab.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-colors ${
+                activeFilter === tab.id
+                  ? 'bg-amber-500 text-black shadow-sm'
+                  : 'text-stone-300 hover:text-white bg-black border border-neutral-800'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* OPTIONAL PANEL: MANUAL POSITION PLACEMENT */}
+      {/* PANNEAU OPTIONNEL : OUTILS AVANCÉS (Masqué par défaut pour ne pas surcharger l'écran) */}
       {isPlacementPanelOpen && (
-        <div className="bg-neutral-950 border border-sky-500/60 rounded-md p-4 space-y-3 text-xs font-mono">
+        <div className="bg-neutral-950 border border-neutral-700 rounded-xl p-4 space-y-3 text-xs">
           <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
-            <span className="font-bold text-sky-400 uppercase">
-              {isFr ? 'Fixer votre position manuellement (WGS84)' : 'Set Your Position Manually (WGS84)'}
+            <span className="font-bold text-amber-400 uppercase">
+              🛠️ {isFr ? 'Outils Avancés (Position manuelle, Sauvegarde Zone, Boussole, GPX)' : 'Advanced Tools'}
             </span>
             <button onClick={() => setIsPlacementPanelOpen(false)} className="text-stone-400 hover:text-white">
               ✕
             </button>
           </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -1498,22 +1573,51 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                 setIsDirectPlacementActive(true);
                 setIsPlacementPanelOpen(false);
               }}
-              className="px-3 py-1.5 bg-amber-500 text-black font-bold rounded-sm cursor-pointer"
+              className="px-3 py-1.5 bg-amber-500 text-black font-bold rounded-lg cursor-pointer"
             >
-              🎯 {isFr ? 'Cliquer sur la carte pour placer' : 'Click on map to place'}
+              🎯 {isFr ? 'Cliquer sur la carte pour placer ma position' : 'Click map to set my position'}
             </button>
+
             <button
-              type="button"
-              onClick={() => {
-                setUserLocationAndPersist(currentCenter);
-                setIsPlacementPanelOpen(false);
-              }}
-              className="px-3 py-1.5 bg-sky-600 text-white font-bold rounded-sm cursor-pointer"
+              onClick={handleScanOsmWaterAndHospitals}
+              disabled={isScanningOsm}
+              className="px-3 py-1.5 rounded-lg bg-sky-950 hover:bg-sky-900 border border-sky-600 text-sky-200 font-bold flex items-center gap-1.5 cursor-pointer"
             >
-              ⊕ {isFr ? 'Fixer au centre du viseur' : 'Set to center crosshair'}
+              <RotateCcw className={`w-3.5 h-3.5 ${isScanningOsm ? 'animate-spin' : ''}`} />
+              <span>
+                {isScanningOsm
+                  ? isFr ? 'Enregistrement...' : 'Saving...'
+                  : isFr ? '📥 Enregistrer les points de cette zone avant coupure' : '📥 Save Area Points'}
+              </span>
+            </button>
+
+            <button
+              onClick={() => setClusteringEnabled(!clusteringEnabled)}
+              className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-stone-200 cursor-pointer"
+            >
+              {isFr
+                ? `Regrouper les points de loin : ${clusteringEnabled ? 'OUI' : 'NON'}`
+                : `Group points: ${clusteringEnabled ? 'YES' : 'NO'}`}
+            </button>
+
+            <button
+              onClick={() => setIsTriangulating(!isTriangulating)}
+              className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-emerald-300 cursor-pointer flex items-center gap-1"
+            >
+              <Triangle className="w-3.5 h-3.5" />
+              <span>{isFr ? 'Boussole sans GPS' : 'Compass Resection'}</span>
+            </button>
+
+            <button
+              onClick={handleExportGpx}
+              className="px-3 py-1.5 rounded-lg bg-neutral-900 border border-neutral-700 text-stone-300 cursor-pointer flex items-center gap-1"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>{isFr ? 'Exporter GPX' : 'Export GPX'}</span>
             </button>
           </div>
-          <form onSubmit={handleApplyManualCoordinates} className="flex flex-wrap items-end gap-2 pt-1">
+
+          <form onSubmit={handleApplyManualCoordinates} className="flex flex-wrap items-end gap-2 pt-2 border-t border-neutral-800">
             <div>
               <label className="block text-[10px] text-stone-400">Latitude</label>
               <input
@@ -1521,7 +1625,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                 step="0.0001"
                 value={manualLatInput}
                 onChange={e => setManualLatInput(e.target.value)}
-                className="bg-black border border-neutral-800 rounded-sm px-2 py-1 text-sky-300 w-28"
+                className="bg-black border border-neutral-800 rounded-md px-2 py-1 text-sky-300 w-28"
               />
             </div>
             <div>
@@ -1531,35 +1635,47 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                 step="0.0001"
                 value={manualLonInput}
                 onChange={e => setManualLonInput(e.target.value)}
-                className="bg-black border border-neutral-800 rounded-sm px-2 py-1 text-sky-300 w-28"
+                className="bg-black border border-neutral-800 rounded-md px-2 py-1 text-sky-300 w-28"
               />
             </div>
-            <button type="submit" className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded-sm">
-              {isFr ? 'Appliquer' : 'Apply'}
+            <button type="submit" className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded-md">
+              {isFr ? 'Aller à ces coordonnées' : 'Apply'}
             </button>
+
+            <div className="flex items-center gap-2 ml-auto">
+              <Footprints className="w-4 h-4 text-amber-400" />
+              <span className="text-stone-400">{isFr ? 'Pas :' : 'Paces:'}</span>
+              <input
+                type="number"
+                value={pacesCount}
+                onChange={e => setPacesCount(parseInt(e.target.value) || 0)}
+                className="w-16 bg-black border border-neutral-800 rounded-md px-2 py-1 text-amber-300 text-center"
+              />
+              <span className="text-amber-400 font-bold">= {(pacesCount * userPaceLengthMeters).toFixed(0)} m</span>
+            </div>
           </form>
         </div>
       )}
 
       {/* OPTIONAL PANEL: NO-GPS COMPASS RESECTION */}
       {isTriangulating && (
-        <div className="bg-neutral-950 border border-emerald-500/60 rounded-md p-4 space-y-3 text-xs font-mono">
+        <div className="bg-neutral-950 border border-emerald-500/60 rounded-xl p-4 space-y-3 text-xs font-mono">
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-neutral-800 pb-2">
             <span className="font-bold text-emerald-400 uppercase">
-              {isFr ? 'Pointage Sans GPS (Recoupement Boussole & Estime)' : 'No-GPS Positioning (Resection & Dead Reckoning)'}
+              {isFr ? 'Pointage Sans GPS (Boussole)' : 'No-GPS Compass Positioning'}
             </span>
             <div className="flex items-center gap-1.5">
               <button
                 onClick={() => setTriangMode('resection')}
                 className={`px-2 py-1 rounded-sm ${triangMode === 'resection' ? 'bg-emerald-600 text-white font-bold' : 'bg-neutral-900 text-stone-400'}`}
               >
-                {isFr ? 'Recoupement (2 Amers)' : 'Resection'}
+                {isFr ? '2 Repères Visuels' : '2 Landmarks'}
               </button>
               <button
                 onClick={() => setTriangMode('dead-reckoning')}
                 className={`px-2 py-1 rounded-sm ${triangMode === 'dead-reckoning' ? 'bg-amber-500 text-black font-bold' : 'bg-neutral-900 text-stone-400'}`}
               >
-                {isFr ? 'Estime (Cap + Distance)' : 'Dead Reckoning'}
+                {isFr ? 'Cap + Distance' : 'Bearing + Dist'}
               </button>
               <button onClick={() => setIsTriangulating(false)} className="text-stone-400 hover:text-white px-1">
                 ✕
@@ -1570,7 +1686,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
           {triangMode === 'resection' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="p-2.5 bg-black border border-neutral-800 rounded-sm space-y-2">
-                <div className="text-emerald-400 font-bold">{isFr ? 'Amer Visuel 1' : 'Landmark 1'}</div>
+                <div className="text-emerald-400 font-bold">{isFr ? 'Repère Visuel 1' : 'Landmark 1'}</div>
                 <select
                   value={triangPoint1Id}
                   onChange={e => setTriangPoint1Id(e.target.value)}
@@ -1581,7 +1697,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                   ))}
                 </select>
                 <div className="flex items-center gap-2">
-                  <span className="text-stone-400">{isFr ? 'Azimut (°):' : 'Azimuth (°):'}</span>
+                  <span className="text-stone-400">{isFr ? 'Angle Boussole (°):' : 'Azimuth (°):'}</span>
                   <input
                     type="number"
                     min="0"
@@ -1594,7 +1710,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
               </div>
 
               <div className="p-2.5 bg-black border border-neutral-800 rounded-sm space-y-2">
-                <div className="text-sky-400 font-bold">{isFr ? 'Amer Visuel 2' : 'Landmark 2'}</div>
+                <div className="text-sky-400 font-bold">{isFr ? 'Repère Visuel 2' : 'Landmark 2'}</div>
                 <select
                   value={triangPoint2Id}
                   onChange={e => setTriangPoint2Id(e.target.value)}
@@ -1605,7 +1721,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                   ))}
                 </select>
                 <div className="flex items-center gap-2">
-                  <span className="text-stone-400">{isFr ? 'Azimut (°):' : 'Azimuth (°):'}</span>
+                  <span className="text-stone-400">{isFr ? 'Angle Boussole (°):' : 'Azimuth (°):'}</span>
                   <input
                     type="number"
                     min="0"
@@ -1622,7 +1738,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
                   onClick={handleCalculateResection}
                   className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-sm"
                 >
-                  {isFr ? 'Calculer l’intersection' : 'Calculate Intersection'}
+                  {isFr ? 'Calculer ma position' : 'Calculate Position'}
                 </button>
                 <button
                   onClick={() => {
@@ -1691,189 +1807,28 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
       )}
 
       {gpsError && (
-        <div className="p-2.5 bg-rose-950/60 border border-rose-800 rounded-sm text-xs text-rose-300 font-mono">
+        <div className="p-2.5 bg-rose-950/60 border border-rose-800 rounded-lg text-xs text-rose-300">
           {gpsError}
         </div>
       )}
 
-      {/* 2. MAIN MAP & SIDEBAR GRID */}
+      {/* 2. CARTE PRINCIPALE & LISTE DES LIEUX */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start min-w-0">
-        {/* Left Column: Map Canvas (8 Cols) */}
-        <div className="lg:col-span-8 space-y-2.5 min-w-0">
-          {/* Category Filter, Zoom Clustering & OSM Water/Hospitals Scanner Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-2 bg-neutral-950 border border-neutral-800 rounded-md p-2 text-xs font-mono">
-            <div className="flex flex-wrap items-center gap-1">
-              {[
-                { id: 'all', label: isFr ? `Tous (${allWaypoints.length})` : `All (${allWaypoints.length})` },
-                {
-                  id: 'water',
-                  label: isFr
-                    ? `💧 Eau Potable (${allWaypoints.filter(w => w.type === 'water').length})`
-                    : `💧 Potable Water (${allWaypoints.filter(w => w.type === 'water').length})`
-                },
-                {
-                  id: 'lakes',
-                  label: isFr
-                    ? `🌊 Plans d’Eau & Lacs (${allWaypoints.filter(w => isLakeOrWaterbody(w)).length})`
-                    : `🌊 Lakes & Reservoirs (${allWaypoints.filter(w => isLakeOrWaterbody(w)).length})`
-                },
-                {
-                  id: 'water-raw',
-                  label: isFr
-                    ? `🚰 Sources, Puits & Eau Brute (${allWaypoints.filter(w => w.type === 'water-raw').length})`
-                    : `🚰 Springs & Raw Water (${allWaypoints.filter(w => w.type === 'water-raw').length})`
-                },
-                {
-                  id: 'medical',
-                  label: isFr
-                    ? `🏥 Hôpitaux & Cliniques (${allWaypoints.filter(w => w.type === 'medical').length})`
-                    : `🏥 Hospitals & Clinics (${allWaypoints.filter(w => w.type === 'medical').length})`
-                },
-                {
-                  id: 'camp',
-                  label: isFr
-                    ? `🌲 Grandes Forêts (${allWaypoints.filter(w => w.type === 'camp').length})`
-                    : `🌲 Major Forests (${allWaypoints.filter(w => w.type === 'camp').length})`
-                },
-                {
-                  id: 'radio',
-                  label: isFr
-                    ? `📡 Émetteurs TDF (${allWaypoints.filter(w => w.type === 'radio').length})`
-                    : `📡 TDF Transmitters (${allWaypoints.filter(w => w.type === 'radio').length})`
-                },
-                {
-                  id: 'shelter',
-                  label: isFr
-                    ? `🏕️ Refuges & Abris (${allWaypoints.filter(w => w.type === 'shelter').length})`
-                    : `🏕️ Refuges (${allWaypoints.filter(w => w.type === 'shelter').length})`
-                }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveFilter(tab.id)}
-                  className={`px-2 py-1 rounded-sm cursor-pointer ${
-                    activeFilter === tab.id
-                      ? 'bg-amber-500 text-black font-bold'
-                      : 'text-stone-300 hover:text-white bg-black border border-neutral-800/80'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex flex-wrap items-center gap-1.5">
-              <button
-                onClick={handleScanOsmWaterAndHospitals}
-                disabled={isScanningOsm}
-                className="px-2.5 py-1 rounded-sm bg-sky-950/90 hover:bg-sky-900 border border-sky-600 text-sky-200 text-[11px] font-bold flex items-center gap-1 cursor-pointer"
-                title={
-                  isFr
-                    ? 'Enregistrer dans la mémoire hors-ligne tous les points supplémentaires de la zone affichée avant une coupure Internet'
-                    : 'Save all extra points in current view before an outage'
-                }
-              >
-                <RotateCcw className={`w-3 h-3 ${isScanningOsm ? 'animate-spin' : ''}`} />
-                <span>
-                  {isScanningOsm
-                    ? isFr
-                      ? 'Enregistrement de la zone...'
-                      : 'Saving area...'
-                    : isFr
-                    ? '📥 Enregistrer cette zone avant coupure'
-                    : '📥 Save Area Before Outage'}
-                </span>
-              </button>
-
-              <button
-                onClick={() => setClusteringEnabled(!clusteringEnabled)}
-                className={`px-2 py-1 rounded-sm border text-[11px] flex items-center gap-1 cursor-pointer ${
-                  clusteringEnabled
-                    ? 'bg-amber-950/80 border-amber-600 text-amber-300 font-bold'
-                    : 'bg-neutral-900 border-neutral-700 text-stone-400'
-                }`}
-                title={
-                  isFr
-                    ? 'Regrouper ou afficher tous les points séparément sur la carte'
-                    : 'Group or show all points individually'
-                }
-              >
-                <Layers className="w-3 h-3" />
-                <span>
-                  {isFr
-                    ? `Regrouper de loin : ${clusteringEnabled ? 'OUI' : 'NON'}`
-                    : `Group when zoomed out: ${clusteringEnabled ? 'YES' : 'NO'}`}
-                </span>
-              </button>
-
-              <div className="flex items-center bg-black border border-neutral-800 rounded-sm p-0.5 gap-0.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMapTheme('organic');
-                    setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
-                  }}
-                  className={`px-2 py-1 rounded-sm text-[11px] font-bold cursor-pointer ${
-                    mapTheme === 'organic'
-                      ? 'bg-amber-500 text-black'
-                      : 'text-stone-300 hover:text-white'
-                  }`}
-                >
-                  🗺️ {isFr ? 'Couleur' : 'Color'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMapTheme('tactical-oled');
-                    setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
-                  }}
-                  className={`px-2 py-1 rounded-sm text-[11px] font-bold cursor-pointer ${
-                    mapTheme === 'tactical-oled'
-                      ? 'bg-amber-500 text-black'
-                      : 'text-stone-300 hover:text-white'
-                  }`}
-                >
-                  🌑 {isFr ? 'Sombre' : 'Dark'}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMapTheme('red-night');
-                    setTimeout(() => mapInstanceRef.current?.invalidateSize(), 50);
-                  }}
-                  className={`px-2 py-1 rounded-sm text-[11px] font-bold cursor-pointer ${
-                    mapTheme === 'red-night'
-                      ? 'bg-rose-600 text-white'
-                      : 'text-stone-300 hover:text-white'
-                  }`}
-                >
-                  🔴 {isFr ? 'Nuit' : 'Night'}
-                </button>
-              </div>
-            </div>
+        {/* Colonne Gauche : Carte (8 colonnes) */}
+        <div className="lg:col-span-8 space-y-2 min-w-0">
+          {/* Légende ultra-simple en 1 ligne */}
+          <div className="bg-black border border-neutral-800 rounded-lg px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-stone-300">
+            <span><b className="text-sky-400">💧 Eau Potable :</b> Boire directement</span>
+            <span><b className="text-cyan-400">🌊 Lac / Plan d’eau :</b> Filtrer + bouillir 1 min</span>
+            <span><b className="text-teal-400">🚰 Source / Puits :</b> Faire bouillir</span>
+            <span><b className="text-rose-400">🏥 Hôpital / Clinique :</b> Soins</span>
+            <span><b className="text-emerald-400">🌲 Forêt :</b> Bois & Abri</span>
+            <span><b className="text-indigo-400">📡 TDF :</b> Radio</span>
           </div>
 
-          {/* Beginner-friendly Plain-Language Legend Bar */}
-          <div className="bg-black border border-neutral-800 rounded-md px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 text-[11px] text-stone-300">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <span><b className="text-sky-400">💧 Eau Potable :</b> Boire directement</span>
-              <span><b className="text-cyan-400">🌊 Lac / Plan d’eau :</b> Filtrer + bouillir 1 min</span>
-              <span><b className="text-teal-400">🚰 Source / Puits :</b> Faire bouillir</span>
-              <span><b className="text-rose-400">🏥 Hôpital / Clinique :</b> Soins & Urgences</span>
-              <span><b className="text-emerald-400">🌲 Forêt :</b> Bois de chauffe & Abri</span>
-              <span><b className="text-indigo-400">📡 Émetteur TDF :</b> Point haut & Radio secours</span>
-            </div>
-            <button
-              onClick={() => handleSelectRegion('dept-66')}
-              className="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/60 text-amber-300 font-mono text-[10px] font-bold cursor-pointer"
-            >
-              📍 Zoom rapide Dépt 66 (Pyrénées-Orientales)
-            </button>
-          </div>
-
-          {/* LEAFLET MAP CONTAINER — Theme class on wrapper so React never overwrites Leaflet's leaflet-container class on mapContainerRef */}
+          {/* Conteneur Leaflet */}
           <div
-            className={`relative w-full h-[350px] sm:h-[500px] rounded-md border border-neutral-800 overflow-hidden ${
+            className={`relative w-full h-[380px] sm:h-[520px] rounded-xl border border-neutral-800 overflow-hidden ${
               mapTheme === 'organic'
                 ? 'map-theme-color bg-stone-200'
                 : mapTheme === 'red-night'
@@ -1883,410 +1838,285 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
           >
             <div ref={mapContainerRef} className="w-full h-full" />
 
-            {/* Center Crosshair */}
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[400] opacity-40 text-amber-400">
-              <Crosshair className="w-7 h-7" />
+            {/* Viseur central discret */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-[400] opacity-35 text-amber-400">
+              <Crosshair className="w-6 h-6" />
             </div>
 
-            {/* Direct Placement Active Banner */}
             {isDirectPlacementActive && (
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[500] bg-sky-950 border border-sky-400 text-sky-200 rounded-sm px-3 py-1.5 flex items-center gap-2 font-mono text-xs">
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[500] bg-sky-950 border border-sky-400 text-sky-200 rounded-lg px-3 py-1.5 flex items-center gap-2 text-xs font-bold">
                 <span>🎯 {isFr ? 'Cliquez sur la carte pour fixer votre position' : 'Click map to set location'}</span>
                 <button
                   onClick={() => setIsDirectPlacementActive(false)}
-                  className="px-2 py-0.5 bg-black text-stone-300 rounded-sm"
+                  className="px-2 py-0.5 bg-black text-stone-300 rounded"
                 >
                   ✕
                 </button>
               </div>
             )}
 
-            {/* Clicked Point Quick Banner */}
             {clickedCoord && !isDirectPlacementActive && (
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[500] bg-black/95 border border-amber-500 rounded-sm p-2 flex flex-wrap items-center gap-2 font-mono text-xs max-w-[95%]">
-                <span className="text-amber-400 font-bold tabular-nums">
-                  {clickedCoord.lat.toFixed(4)}°N, {clickedCoord.lon.toFixed(4)}°E
-                </span>
+              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-[500] bg-black/95 border border-amber-500 rounded-lg p-2 flex flex-wrap items-center gap-2 text-xs max-w-[95%] shadow-xl">
                 <button
                   onClick={() => {
                     setUserLocationAndPersist(clickedCoord);
                     setClickedCoord(null);
                   }}
-                  className="px-2 py-1 bg-sky-600 text-white font-bold rounded-sm text-[11px]"
+                  className="px-2.5 py-1 bg-sky-600 text-white font-bold rounded text-xs cursor-pointer"
                 >
-                  {isFr ? 'Ma position ici' : 'Set My Pos'}
+                  📍 {isFr ? 'Je suis ici' : 'I am here'}
                 </button>
                 <button
                   onClick={() => {
                     setIsAddingPoint(true);
                     setSidebarTab('inspector');
                   }}
-                  className="px-2 py-1 bg-amber-500 text-black font-bold rounded-sm text-[11px]"
+                  className="px-2.5 py-1 bg-amber-500 text-black font-bold rounded text-xs cursor-pointer"
                 >
-                  + {isFr ? 'Créer repère' : 'Add Point'}
+                  + {isFr ? 'Enregistrer ce point' : 'Save this point'}
                 </button>
-                <button onClick={() => setClickedCoord(null)} className="text-stone-400 hover:text-white px-1">
+                <button onClick={() => setClickedCoord(null)} className="text-stone-400 hover:text-white px-1.5">
                   ✕
                 </button>
               </div>
             )}
 
-            {/* Zoom Controls */}
-            <div className="absolute right-3 bottom-3 flex flex-col gap-1 z-[500]">
+            {/* Boutons Zoom + / - */}
+            <div className="absolute right-3 bottom-3 flex flex-col gap-1.5 z-[500]">
               <button
                 onClick={() => mapInstanceRef.current?.zoomIn()}
-                className="w-8 h-8 rounded-sm bg-black/90 border border-neutral-700 text-stone-200 hover:text-white flex items-center justify-center"
+                className="w-9 h-9 rounded-lg bg-black/90 border border-neutral-700 text-white flex items-center justify-center shadow-md cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
               </button>
               <button
                 onClick={() => mapInstanceRef.current?.zoomOut()}
-                className="w-8 h-8 rounded-sm bg-black/90 border border-neutral-700 text-stone-200 hover:text-white flex items-center justify-center"
+                className="w-9 h-9 rounded-lg bg-black/90 border border-neutral-700 text-white flex items-center justify-center shadow-md cursor-pointer"
               >
                 <Minus className="w-4 h-4" />
               </button>
             </div>
-
-            {/* Bottom-Left Coordinates Readout */}
-            <div className="absolute left-3 bottom-3 bg-black/90 border border-neutral-800 px-2.5 py-1.5 rounded-sm text-[10px] font-mono text-stone-300 z-[500]">
-              <div className="text-amber-400 font-bold tabular-nums">
-                {currentCenter.lat.toFixed(4)}°N · {currentCenter.lon.toFixed(4)}°E
-              </div>
-              <div className="text-stone-400 tabular-nums">
-                {toDms(currentCenter.lat, true)} {toDms(currentCenter.lon, false)}
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Right Column: Inspector & Regional Landmarks List (4 Cols) */}
+        {/* Colonne Droite : Fiche du lieu sélectionné + Liste simple avec recherche (4 colonnes) */}
         <div className="lg:col-span-4 space-y-3 min-w-0">
-          {/* Sidebar Mode Switcher */}
-          <div className="flex items-center gap-1 bg-neutral-950 border border-neutral-800 p-1 rounded-md">
-            <button
-              onClick={() => {
-                setSidebarTab('list');
-                setIsAddingPoint(false);
-              }}
-              className={`flex-1 py-1.5 text-xs font-mono font-bold rounded-sm flex items-center justify-center gap-1.5 cursor-pointer ${
-                sidebarTab === 'list' && !isAddingPoint
-                  ? 'bg-amber-500 text-black'
-                  : 'text-stone-400 hover:text-white'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>{isFr ? `Repères (${visibleWaypoints.length})` : `Points (${visibleWaypoints.length})`}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setSidebarTab('inspector');
-                setIsAddingPoint(false);
-              }}
-              className={`flex-1 py-1.5 text-xs font-mono font-bold rounded-sm flex items-center justify-center gap-1.5 cursor-pointer ${
-                sidebarTab === 'inspector' && !isAddingPoint
-                  ? 'bg-amber-500 text-black'
-                  : 'text-stone-400 hover:text-white'
-              }`}
-            >
-              <Compass className="w-3.5 h-3.5" />
-              <span>{isFr ? 'Azimut & Détails' : 'Azimuth'}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setIsAddingPoint(true);
-                setSidebarTab('inspector');
-              }}
-              className={`px-2.5 py-1.5 text-xs font-mono font-bold rounded-sm flex items-center justify-center gap-1 cursor-pointer ${
-                isAddingPoint
-                  ? 'bg-emerald-500 text-black'
-                  : 'bg-neutral-900 text-emerald-400 border border-neutral-800'
-              }`}
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
-          </div>
-
-          {/* TAB: WAYPOINTS LIST (Filtered by Selected Region) */}
-          {sidebarTab === 'list' && !isAddingPoint && (
-            <div className="border border-neutral-800 rounded-md bg-neutral-950 p-3 space-y-2.5">
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-2 text-xs font-mono">
-                <span className="font-bold text-amber-300 truncate">
-                  {FRENCH_REGIONS.find(r => r.id === selectedRegionId)?.nameFr || 'France'}
-                </span>
-                <span className="text-[10px] text-stone-400 shrink-0">
-                  {visibleWaypoints.length} {isFr ? 'repères réels' : 'real POIs'}
-                </span>
-              </div>
-
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-stone-500 absolute left-2.5 top-2" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  placeholder={isFr ? 'Filtrer par nom (CHU, refuge, lac)...' : 'Filter by name...'}
-                  className="w-full bg-black border border-neutral-800 rounded-sm pl-8 pr-2.5 py-1.5 text-xs text-stone-200 font-mono focus:outline-none focus:border-amber-500"
-                />
-              </div>
-
-              <div className="max-h-[340px] overflow-y-auto space-y-1.5 pr-1 font-mono text-xs">
-                {visibleWaypoints.map(wp => {
-                  const nav = userLocation
-                    ? calculateNav(userLocation.lat, userLocation.lon, wp.lat, wp.lon)
-                    : null;
-                  return (
-                    <div
-                      key={wp.id}
-                      onClick={() => {
-                        setSelectedWaypoint(wp);
-                        setSidebarTab('inspector');
-                        mapInstanceRef.current?.flyTo([wp.lat, wp.lon], 12, { duration: 0.8 });
-                      }}
-                      className={`p-2 rounded-sm border flex items-center justify-between gap-2 cursor-pointer ${
-                        selectedWaypoint?.id === wp.id
-                          ? 'bg-neutral-900 border-amber-500 text-white'
-                          : 'bg-black border-neutral-800/80 text-stone-300 hover:border-neutral-700'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2 min-w-0 flex-1">
-                        <span className="text-sm shrink-0">
-                          {wp.type === 'water'
-                            ? '💧'
-                            : isLakeOrWaterbody(wp)
-                            ? '🌊'
-                            : wp.type === 'water-raw'
-                            ? '🚰'
-                            : wp.type === 'shelter'
-                            ? '🏕️'
-                            : wp.type === 'medical'
-                            ? '🏥'
-                            : wp.type === 'radio'
-                            ? '📡'
-                            : wp.type === 'danger'
-                            ? '⚠️'
-                            : '🌲'}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <div className="font-bold truncate text-[11px] text-stone-100">{wp.name}</div>
-                          <div className="text-[10px] text-stone-400 flex items-center gap-2">
-                            <span>{wp.lat.toFixed(3)}°N, {wp.lon.toFixed(3)}°E</span>
-                            {nav && (
-                              <span className="text-amber-400 font-bold">
-                                · {Math.round(nav.distanceKm)} km ({nav.bearing}°)
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {wp.isUserAdded && (
-                        <button
-                          onClick={e => {
-                            e.stopPropagation();
-                            handleDeleteUserWaypoint(wp.id);
-                          }}
-                          className="p-1 text-stone-500 hover:text-rose-400 shrink-0"
-                          title={isFr ? 'Supprimer ce repère personnel' : 'Delete custom waypoint'}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  );
-                })}
-
-                {visibleWaypoints.length === 0 && (
-                  <div className="p-4 text-center text-stone-500 text-xs">
-                    {isFr ? 'Aucun repère dans cette sélection.' : 'No waypoints in this filter.'}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB: INSPECTOR & AZIMUTH */}
-          {sidebarTab === 'inspector' && !isAddingPoint && (
-            <div className="space-y-3">
-              {selectedWaypoint ? (
-                <div className="border border-neutral-800 rounded-md bg-neutral-950 p-4 space-y-3 font-mono">
-                  <div className="flex items-start justify-between gap-2 border-b border-neutral-800 pb-2.5">
-                    <div className="min-w-0">
-                      <span className="text-[10px] uppercase text-amber-400 font-bold block">
-                        {selectedWaypoint.isUserAdded
-                          ? isFr
-                            ? 'REPÈRE PERSONNEL'
-                            : 'USER WAYPOINT'
-                          : isFr
-                          ? 'POINT DE REPÈRE RÉEL VÉRIFIÉ'
-                          : 'VERIFIED REAL LANDMARK'}
-                      </span>
-                      <h3 className="text-sm font-bold text-white leading-snug mt-0.5">
-                        {selectedWaypoint.name}
-                      </h3>
-                    </div>
-                    {selectedWaypoint.isUserAdded && (
-                      <button
-                        onClick={() => handleDeleteUserWaypoint(selectedWaypoint.id)}
-                        className="p-1 text-rose-400 hover:bg-neutral-900 rounded-sm"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-
-                  <div className="p-2.5 bg-black border border-neutral-800 rounded-sm text-[11px] space-y-1">
-                    <div className="flex justify-between text-stone-400">
-                      <span>WGS84 :</span>
-                      <span className="text-amber-400 font-bold tabular-nums">
-                        {selectedWaypoint.lat.toFixed(5)}°N, {selectedWaypoint.lon.toFixed(5)}°E
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-stone-400">
-                      <span>DMS :</span>
-                      <span className="text-stone-200 tabular-nums">
-                        {toDms(selectedWaypoint.lat, true)} {toDms(selectedWaypoint.lon, false)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {navInfo && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="p-2.5 bg-black border border-neutral-800 rounded-sm text-center">
-                        <span className="text-[10px] text-stone-400 uppercase block">
-                          {isFr ? 'Azimut Boussole' : 'Azimuth'}
-                        </span>
-                        <span className="text-lg font-bold text-amber-400 tabular-nums">
-                          {navInfo.bearing}° ({getCompassRose(navInfo.bearing)})
-                        </span>
-                      </div>
-                      <div className="p-2.5 bg-black border border-neutral-800 rounded-sm text-center">
-                        <span className="text-[10px] text-stone-400 uppercase block">
-                          {isFr ? 'Distance Vol d’Oiseau' : 'Direct Distance'}
-                        </span>
-                        <span className="text-lg font-bold text-emerald-400 tabular-nums">
-                          {navInfo.distanceMeters >= 1000
-                            ? `${navInfo.distanceKm.toFixed(1)} km`
-                            : `${navInfo.distanceMeters} m`}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedWaypoint.notes && (
-                    <p className="text-xs text-stone-300 bg-black p-2.5 rounded-sm border border-neutral-800 leading-relaxed">
-                      {selectedWaypoint.notes}
-                    </p>
-                  )}
-
-                  <button
-                    onClick={() => setSidebarTab('list')}
-                    className="w-full py-1.5 bg-neutral-900 hover:bg-neutral-800 text-stone-300 text-xs rounded-sm border border-neutral-800"
-                  >
-                    ← {isFr ? 'Retour à la liste régionale' : 'Back to regional list'}
-                  </button>
-                </div>
-              ) : (
-                <div className="border border-neutral-800 rounded-md bg-neutral-950 p-5 text-center text-stone-400 text-xs space-y-2.5 font-mono">
-                  <Compass className="w-7 h-7 text-stone-600 mx-auto" />
-                  <p>
-                    {isFr
-                      ? 'Sélectionnez un point de repère réel sur la carte ou dans la liste pour obtenir son azimut et sa distance exacte.'
-                      : 'Select a real landmark on the map or list to calculate bearing and distance.'}
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* FORM: ADD CUSTOM WAYPOINT */}
+          {/* FORMULAIRE D'AJOUT DE LIEU PERSONNEL */}
           {isAddingPoint && (
             <form
               onSubmit={handleAddWaypoint}
-              className="border border-amber-500/70 rounded-md bg-neutral-950 p-4 space-y-3 font-mono text-xs"
+              className="border-2 border-amber-500 rounded-xl bg-neutral-950 p-4 space-y-3 text-xs"
             >
               <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
-                <span className="font-bold text-amber-400 uppercase">
-                  {isFr ? 'Nouveau Repère Personnel' : 'New Personal Waypoint'}
+                <span className="font-extrabold text-amber-400 uppercase">
+                  + {isFr ? 'Ajouter un Lieu Personnel' : 'Add Personal Point'}
                 </span>
                 <button type="button" onClick={() => setIsAddingPoint(false)} className="text-stone-400 hover:text-white">
                   ✕
                 </button>
               </div>
 
-              <div className="p-2 bg-black border border-neutral-800 rounded-sm text-[11px] flex justify-between">
-                <span className="text-stone-400">{isFr ? 'Coordonnées :' : 'Coords:'}</span>
-                <span className="text-amber-400 font-bold tabular-nums">
-                  {(clickedCoord ? clickedCoord.lat : currentCenter.lat).toFixed(4)}°N,{' '}
-                  {(clickedCoord ? clickedCoord.lon : currentCenter.lon).toFixed(4)}°E
-                </span>
-              </div>
-
               <div>
-                <label className="block text-[11px] text-stone-400 mb-1">{isFr ? 'Nom du repère :' : 'Name:'}</label>
+                <label className="block text-xs text-stone-300 mb-1 font-bold">{isFr ? 'Nom du lieu :' : 'Name:'}</label>
                 <input
                   type="text"
                   required
                   value={newPointName}
                   onChange={e => setNewPointName(e.target.value)}
-                  placeholder={isFr ? 'Ex: Point d’eau vérifié, Bivouac...' : 'e.g. Verified spring, Camp...'}
-                  className="w-full bg-black border border-neutral-800 rounded-sm px-2.5 py-1.5 text-white focus:outline-none focus:border-amber-500"
+                  placeholder={isFr ? 'Ex: Fontaine, Maison, Abri...' : 'e.g. Spring, Home...'}
+                  className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-amber-500"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[11px] text-stone-400 mb-1">{isFr ? 'Type :' : 'Type:'}</label>
-                  <select
-                    value={newPointType}
-                    onChange={e => setNewPointType(e.target.value as Waypoint['type'])}
-                    className="w-full bg-black border border-neutral-800 rounded-sm px-2 py-1.5 text-stone-200"
-                  >
-                    <option value="water">{isFr ? '💧 Eau Potable' : '💧 Potable Water'}</option>
-                    <option value="water-raw">{isFr ? '🚰 Eau Non Potable / À traiter' : '🚰 Non-Potable Water'}</option>
-                    <option value="shelter">{isFr ? '🏕️ Abri / Refuge' : '🏕️ Shelter'}</option>
-                    <option value="medical">{isFr ? '🏥 Secours / CHU' : '🏥 Medical'}</option>
-                    <option value="radio">{isFr ? '📡 Relais Radio' : '📡 Radio'}</option>
-                    <option value="camp">{isFr ? '🌲 Bivouac' : '🌲 Camp'}</option>
-                    <option value="danger">{isFr ? '⚠️ Danger' : '⚠️ Hazard'}</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-[11px] text-stone-400 mb-1">{isFr ? 'Notes :' : 'Notes:'}</label>
-                  <input
-                    type="text"
-                    value={newPointNotes}
-                    onChange={e => setNewPointNotes(e.target.value)}
-                    placeholder={isFr ? 'Détails terrain...' : 'Field notes...'}
-                    className="w-full bg-black border border-neutral-800 rounded-sm px-2 py-1.5 text-white"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs text-stone-300 mb-1 font-bold">{isFr ? 'Catégorie :' : 'Type:'}</label>
+                <select
+                  value={newPointType}
+                  onChange={e => setNewPointType(e.target.value as Waypoint['type'])}
+                  className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-stone-200"
+                >
+                  <option value="water">{isFr ? '💧 Eau Potable' : '💧 Potable Water'}</option>
+                  <option value="water-raw">{isFr ? '🚰 Eau à filtrer / bouillir' : '🚰 Raw Water'}</option>
+                  <option value="medical">{isFr ? '🏥 Hôpital / Clinique / Secours' : '🏥 Medical'}</option>
+                  <option value="shelter">{isFr ? '🏕️ Abri / Refuge' : '🏕️ Shelter'}</option>
+                  <option value="camp">{isFr ? '🌲 Forêt / Bivouac' : '🌲 Forest / Camp'}</option>
+                  <option value="radio">{isFr ? '📡 Émetteur Radio' : '📡 Radio'}</option>
+                  <option value="danger">{isFr ? '⚠️ Danger' : '⚠️ Hazard'}</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs text-stone-300 mb-1 font-bold">{isFr ? 'Note utile (facultatif) :' : 'Notes:'}</label>
+                <input
+                  type="text"
+                  value={newPointNotes}
+                  onChange={e => setNewPointNotes(e.target.value)}
+                  placeholder={isFr ? 'Précisions...' : 'Details...'}
+                  className="w-full bg-black border border-neutral-700 rounded-lg px-3 py-2 text-white"
+                />
               </div>
 
               <button
                 type="submit"
-                className="w-full py-2 bg-amber-500 hover:bg-amber-400 text-black font-bold rounded-sm cursor-pointer"
+                className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-extrabold rounded-lg cursor-pointer"
               >
-                ✓ {isFr ? 'Enregistrer sur la carte' : 'Save Waypoint'}
+                ✓ {isFr ? 'Enregistrer sur ma carte' : 'Save on Map'}
               </button>
             </form>
           )}
 
-          {/* Compact Pace Counter */}
-          <div className="border border-neutral-800 rounded-md bg-neutral-950 p-3 flex items-center justify-between gap-2 text-xs font-mono">
-            <div className="flex items-center gap-2">
-              <Footprints className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="text-stone-300">{isFr ? 'Doubles-pas :' : 'Paces:'}</span>
+          {/* FICHE DU LIEU SÉLECTIONNÉ (Apparaît dès qu'on clique sur un point) */}
+          {selectedWaypoint && !isAddingPoint && (
+            <div className="border-2 border-amber-500 rounded-xl bg-neutral-950 p-4 space-y-3 shadow-lg">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="text-[11px] font-extrabold uppercase text-amber-400 block">
+                    {selectedWaypoint.type === 'water'
+                      ? '💧 EAU POTABLE (BOIRE DIRECTEMENT)'
+                      : isLakeOrWaterbody(selectedWaypoint)
+                      ? '🌊 LAC / PLAN D’EAU (FILTRER + BOUILLIR 1 MIN)'
+                      : selectedWaypoint.type === 'water-raw'
+                      ? '🚰 SOURCE / PUITS (FAIRE BOUILLIR AVANT DE BOIRE)'
+                      : selectedWaypoint.type === 'medical'
+                      ? '🏥 HÔPITAL / CLINIQUE / URGENCES'
+                      : selectedWaypoint.type === 'camp'
+                      ? '🌲 MASSIF FORESTIER (BOIS & ABRI)'
+                      : selectedWaypoint.type === 'radio'
+                      ? '📡 ÉMETTEUR RADIO TDF (POINT HAUT)'
+                      : '🏕️ REFUGE / ABRI'}
+                  </span>
+                  <h3 className="text-base font-extrabold text-white leading-snug mt-0.5">
+                    {selectedWaypoint.name}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setSelectedWaypoint(null)}
+                  className="px-2 py-1 rounded bg-neutral-900 text-stone-400 hover:text-white text-xs"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {navInfo && (
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="p-2.5 bg-black border border-neutral-800 rounded-lg text-center">
+                    <span className="text-[10px] text-stone-400 uppercase block">
+                      {isFr ? 'Distance' : 'Distance'}
+                    </span>
+                    <span className="text-base font-extrabold text-emerald-400">
+                      {navInfo.distanceMeters >= 1000
+                        ? `${navInfo.distanceKm.toFixed(1)} km`
+                        : `${navInfo.distanceMeters} m`}
+                    </span>
+                  </div>
+                  <div className="p-2.5 bg-black border border-neutral-800 rounded-lg text-center">
+                    <span className="text-[10px] text-stone-400 uppercase block">
+                      {isFr ? 'Direction Boussole' : 'Direction'}
+                    </span>
+                    <span className="text-base font-extrabold text-amber-400">
+                      {getCompassRose(navInfo.bearing)} ({navInfo.bearing}°)
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {selectedWaypoint.notes && (
+                <p className="text-xs text-stone-200 bg-black p-3 rounded-lg border border-neutral-800 leading-relaxed">
+                  {selectedWaypoint.notes}
+                </p>
+              )}
+
+              <div className="flex items-center justify-between text-[11px] text-stone-400 pt-1">
+                <span>GPS : {selectedWaypoint.lat.toFixed(4)}°N, {selectedWaypoint.lon.toFixed(4)}°E</span>
+                {selectedWaypoint.isUserAdded && (
+                  <button
+                    onClick={() => handleDeleteUserWaypoint(selectedWaypoint.id)}
+                    className="text-rose-400 hover:underline flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>{isFr ? 'Supprimer' : 'Delete'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* LISTE DES LIEUX AVEC RECHERCHE IMMÉDIATE */}
+          <div className="border border-neutral-800 rounded-xl bg-neutral-950 p-3.5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-extrabold text-white uppercase">
+                {isFr ? `Lieux trouvés (${visibleWaypoints.length})` : `Places found (${visibleWaypoints.length})`}
+              </span>
+              <span className="text-[11px] text-amber-400 font-bold truncate max-w-[180px]">
+                {FRENCH_REGIONS.find(r => r.id === selectedRegionId)?.nameFr || 'France'}
+              </span>
+            </div>
+
+            <div className="relative">
+              <Search className="w-4 h-4 text-stone-400 absolute left-3 top-2.5" />
               <input
-                type="number"
-                value={pacesCount}
-                onChange={e => setPacesCount(parseInt(e.target.value) || 0)}
-                className="w-16 bg-black border border-neutral-800 rounded-sm px-2 py-0.5 text-amber-300 text-center"
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={isFr ? 'Chercher une ville, un lac, une clinique...' : 'Search town, lake, clinic...'}
+                className="w-full bg-black border border-neutral-700 rounded-lg pl-9 pr-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
               />
             </div>
-            <div className="text-stone-400">
-              = <span className="text-amber-400 font-bold tabular-nums">{(pacesCount * userPaceLengthMeters).toFixed(0)} m</span>
+
+            <div className="max-h-[380px] overflow-y-auto space-y-1.5 pr-1 text-xs">
+              {visibleWaypoints.map(wp => {
+                const nav = userLocation
+                  ? calculateNav(userLocation.lat, userLocation.lon, wp.lat, wp.lon)
+                  : null;
+                return (
+                  <div
+                    key={wp.id}
+                    onClick={() => {
+                      setSelectedWaypoint(wp);
+                      mapInstanceRef.current?.flyTo([wp.lat, wp.lon], 13, { duration: 0.7 });
+                    }}
+                    className={`p-2.5 rounded-lg border flex items-center justify-between gap-2 cursor-pointer transition-colors ${
+                      selectedWaypoint?.id === wp.id
+                        ? 'bg-neutral-900 border-amber-500 text-white'
+                        : 'bg-black border-neutral-800/90 text-stone-200 hover:border-neutral-600'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <span className="text-base shrink-0">
+                        {wp.type === 'water'
+                          ? '💧'
+                          : isLakeOrWaterbody(wp)
+                          ? '🌊'
+                          : wp.type === 'water-raw'
+                          ? '🚰'
+                          : wp.type === 'shelter'
+                          ? '🏕️'
+                          : wp.type === 'medical'
+                          ? '🏥'
+                          : wp.type === 'radio'
+                          ? '📡'
+                          : wp.type === 'danger'
+                          ? '⚠️'
+                          : '🌲'}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold truncate text-xs text-white">{wp.name}</div>
+                        {nav && (
+                          <div className="text-[11px] text-amber-400 font-semibold">
+                            À {Math.round(nav.distanceKm)} km ({getCompassRose(nav.bearing)})
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {visibleWaypoints.length === 0 && (
+                <div className="p-4 text-center text-stone-400 text-xs">
+                  {isFr ? 'Aucun lieu trouvé pour cette recherche.' : 'No places found.'}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -2294,7 +2124,7 @@ export const TacticalMap: React.FC<TacticalMapProps> = ({ language }) => {
 
       {/* Toast Notification */}
       {pointToast && (
-        <div className="fixed bottom-5 right-5 z-[9999] bg-neutral-950 border border-emerald-500 text-emerald-300 px-3.5 py-2 rounded-md shadow-xl font-mono text-xs flex items-center gap-2">
+        <div className="fixed bottom-5 right-5 z-[9999] bg-neutral-950 border border-emerald-500 text-emerald-300 px-3.5 py-2 rounded-lg shadow-xl text-xs font-bold flex items-center gap-2">
           <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{pointToast}</span>
         </div>

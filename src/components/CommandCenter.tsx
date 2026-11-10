@@ -1,21 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Language, NavTab } from '../types/sentinel';
-import { SUPPLY_DEPOT_PACKS } from '../data/supplyDepotPacks';
 import {
-  CheckCircle2,
   ArrowRight,
-  BookOpen,
   MapPin,
   ZapOff,
-  Radio,
-  Download,
   Settings,
   Package,
   HeartPulse,
-  Droplet,
-  FlameKindling,
-  ShieldAlert,
-  Smartphone
+  MessageSquare,
+  Smartphone,
+  ShieldAlert
 } from 'lucide-react';
 
 interface CommandCenterProps {
@@ -26,43 +20,36 @@ interface CommandCenterProps {
 
 export const CommandCenter: React.FC<CommandCenterProps> = ({
   language,
-  onNavigate,
-  ecoMode = true
+  onNavigate
 }) => {
   const isFr = language === 'fr';
-  const [downloadToast, setDownloadToast] = useState<string | null>(null);
 
-  const handleDownloadPackById = (packId: string) => {
-    const pack = SUPPLY_DEPOT_PACKS.find(p => p.id === packId);
-    if (!pack) return;
-    const blob = new Blob([pack.contentFr], { type: 'text/markdown;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = pack.filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    setDownloadToast(isFr ? `Pack « ${pack.titleFr} » téléchargé` : `Pack "${pack.titleEn}" downloaded`);
-    setTimeout(() => setDownloadToast(null), 3000);
+  const handleOpenUrgencyDirect = (urgencyId: string) => {
+    try {
+      sessionStorage.setItem('sentinel_open_urgency_id', urgencyId);
+    } catch {}
+    onNavigate('emergency-docs');
   };
 
+  const quickEmergencies = [
+    { id: 'fa-cardiac', icon: '🫀', labelFr: 'Malaise / Cœur', labelEn: 'Heart / Chest Pain' },
+    { id: 'fa-bleeding', icon: '🩸', labelFr: 'Saignement grave', labelEn: 'Severe Bleeding' },
+    { id: 'fa-choking', icon: '🫁', labelFr: 'Étouffement', labelEn: 'Choking' },
+    { id: 'fa-unconscious', icon: '🛌', labelFr: 'Inconscient (PLS)', labelEn: 'Unconscious' },
+    { id: 'fa-burns', icon: '🔥', labelFr: 'Brûlure', labelEn: 'Burns' },
+    { id: 'fa-drowning', icon: '🌊', labelFr: 'Noyade', labelEn: 'Drowning' },
+    { id: 'fa-heatstroke', icon: '☀️', labelFr: 'Coup de chaud', labelEn: 'Heatstroke' },
+    { id: 'fa-bites-stings', icon: '🐍', labelFr: 'Piqûre / Morsure', labelEn: 'Bite / Sting' }
+  ];
+
   return (
-    <div className="space-y-6 min-w-0">
-      {/* 1. LE QG — LARGE BOLD HEADER */}
-      <div
-        className={`border rounded-xl sm:rounded-lg p-4 sm:p-6 relative overflow-hidden ${
-          ecoMode
-            ? 'bg-neutral-950 border-neutral-800'
-            : 'bg-[#221e16] border-amber-800/40'
-        }`}
-      >
+    <div className="max-w-6xl mx-auto space-y-6 min-w-0">
+      {/* 1. EN-TÊTE SIMPLE ET CLAIR */}
+      <div className="border border-neutral-800 bg-neutral-950 rounded-2xl p-5 sm:p-7 relative overflow-hidden">
         <div className="pointer-events-none absolute inset-y-0 left-0 w-1.5 bg-amber-500" />
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 sm:gap-5">
-          <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-md bg-black border-2 border-amber-500 p-1.5 sm:p-2 shrink-0 flex items-center justify-center shadow-lg">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-black border-2 border-amber-500 p-2 shrink-0 flex items-center justify-center">
               <img
                 src="./assets/aistudio/noir_233aab2b.png"
                 alt="Logo Sentinel"
@@ -71,416 +58,209 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             </div>
 
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-mono text-amber-400 uppercase tracking-wider">
-                <span className="font-bold">SENTINEL PACK SURVIE</span>
-                <span className="text-neutral-600">·</span>
-                <span className="px-2 py-0.5 rounded-sm bg-amber-950/90 border border-amber-600 text-amber-300 font-bold text-[10px]">
-                  {ecoMode ? 'ECO POWER OLED ACTIF' : 'MODE STANDARD'}
-                </span>
-              </div>
-              <h1 className="text-2xl sm:text-4xl lg:text-5xl font-black text-amber-50 uppercase tracking-wider sm:tracking-widest mt-1 leading-none">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-950 border border-emerald-600/70 text-emerald-300 text-[11px] font-bold">
+                ✓ {isFr ? '100% Hors-Ligne · Prêt sans Internet' : '100% Offline · Ready without Internet'}
+              </span>
+              <h1 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-wider mt-1.5 leading-none">
                 {isFr ? 'LE QG DU SENTINEL' : 'THE SENTINEL HQ'}
               </h1>
-              <div className="text-sm sm:text-2xl lg:text-3xl font-black text-amber-400 uppercase tracking-[0.12em] sm:tracking-[0.15em] mt-1 leading-tight">
+              <div className="text-sm sm:text-xl font-black text-amber-400 uppercase tracking-widest mt-1">
                 {isFr ? 'LE QUARTIER GÉNÉRAL' : 'THE HEADQUARTERS'}
               </div>
-              <p className="text-xs sm:text-sm text-stone-300 mt-1.5 leading-relaxed">
-                {isFr
-                  ? 'Quartier Général Autonome : Eau potable & Hôpitaux de France, Documentation d’Urgence (8 Secours + 72h), Stocks de Survie & IA.'
-                  : 'Autonomous HQ: France Water & Hospitals Map, Emergency Documentation (8 First Aid + 72h), Survival Stocks & Local AI.'}
-              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
-            {/* Mobile ONLY button — Hidden on Computer/Desktop (md:hidden) */}
-            <button
-              onClick={() => window.dispatchEvent(new Event('sentinel-open-mobile-install'))}
-              className="md:hidden col-span-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-lg flex items-center justify-center gap-2 cursor-pointer shadow-lg shadow-emerald-950/40"
-            >
-              <Smartphone className="w-4 h-4 shrink-0" />
-              <span>{isFr ? '📲 Installer l’App sur ce Téléphone' : '📲 Install App on This Phone'}</span>
-            </button>
-            <button
-              onClick={() => onNavigate('tactical-map')}
-              className="px-3 sm:px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs rounded-lg sm:rounded-sm flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
-            >
-              <MapPin className="w-4 h-4 shrink-0" />
-              <span className="truncate">{isFr ? 'Carte Eau & Hôpitaux' : 'Water & Hospitals'}</span>
-            </button>
-            <button
-              onClick={() => onNavigate('emergency-docs')}
-              className="px-3 sm:px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-amber-200 border border-amber-700/60 font-bold text-xs rounded-lg sm:rounded-sm flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
-            >
-              <BookOpen className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="truncate">{isFr ? 'Doc d’Urgence' : 'Emergency Docs'}</span>
-            </button>
-            <button
-              onClick={() => onNavigate('stocks')}
-              className="col-span-2 sm:col-span-1 px-3 sm:px-4 py-2.5 bg-neutral-900 hover:bg-neutral-800 text-emerald-300 border border-emerald-700/60 font-bold text-xs rounded-lg sm:rounded-sm flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer"
-            >
-              <Package className="w-4 h-4 text-emerald-400 shrink-0" />
-              <span className="truncate">{isFr ? 'Stock de Survie' : 'Survival Stocks'}</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 1B. BEGINNER EMERGENCY GUIDE ("POUR UTILISATEUR NOVICE — QUE FAIRE IMMÉDIATEMENT ?") */}
-      <div className="border border-amber-500/50 rounded-xl bg-black p-4 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded bg-amber-500 text-black font-mono text-[10px] font-black uppercase">
-              {isFr ? 'GUIDE SIMPLE DÉBUTANT' : 'SIMPLE BEGINNER GUIDE'}
-            </span>
-            <h2 className="text-xs sm:text-sm font-extrabold text-white uppercase">
-              {isFr
-                ? 'Que cherchez-vous en urgence maintenant ? (Cliquez sur votre situation)'
-                : 'What do you need right now? (Tap your situation)'}
-            </h2>
-          </div>
-          <span className="text-[11px] font-mono text-emerald-400">
-            ✓ {isFr ? 'Tout est déjà enregistré hors-ligne sur cet appareil' : 'Everything is already saved offline'}
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+          {/* Bouton d'installation visible uniquement sur Téléphone */}
           <button
-            onClick={() => onNavigate('emergency-docs')}
-            className="p-3 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 border border-rose-700/70 text-left flex items-center gap-3 cursor-pointer"
+            onClick={() => window.dispatchEvent(new Event('sentinel-open-mobile-install'))}
+            className="md:hidden w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-black font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-lg"
           >
-            <span className="text-2xl shrink-0">🫀</span>
-            <div className="min-w-0">
-              <div className="text-xs font-extrabold text-rose-200">
-                {isFr ? '1. Blessure ou Malaise' : '1. Injury or Medical Issue'}
-              </div>
-              <div className="text-[11px] text-stone-300 truncate">
-                {isFr ? 'Voir les gestes de secours + Médicaments' : 'First aid steps + Medications'}
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => onNavigate('tactical-map')}
-            className="p-3 rounded-lg bg-sky-950/40 hover:bg-sky-900/60 border border-sky-700/70 text-left flex items-center gap-3 cursor-pointer"
-          >
-            <span className="text-2xl shrink-0">💧</span>
-            <div className="min-w-0">
-              <div className="text-xs font-extrabold text-sky-200">
-                {isFr ? '2. Eau, Lacs, Hôpitaux & Forêts' : '2. Water, Lakes, Hospitals'}
-              </div>
-              <div className="text-[11px] text-stone-300 truncate">
-                {isFr ? 'Carte complète (Eau, Cliniques, TDF, Forêts)' : 'Complete offline map'}
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => onNavigate('blackout')}
-            className="p-3 rounded-lg bg-amber-950/40 hover:bg-amber-900/60 border border-amber-700/70 text-left flex items-center gap-3 cursor-pointer"
-          >
-            <span className="text-2xl shrink-0">⚡</span>
-            <div className="min-w-0">
-              <div className="text-xs font-extrabold text-amber-200">
-                {isFr ? '3. Plus d’Électricité (Blackout)' : '3. Power Outage (Blackout)'}
-              </div>
-              <div className="text-[11px] text-stone-300 truncate">
-                {isFr ? 'Que faire dans les 15 premières minutes' : 'What to do in the first 15 min'}
-              </div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => onNavigate('survival-llm')}
-            className="p-3 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-700/70 text-left flex items-center gap-3 cursor-pointer"
-          >
-            <span className="text-2xl shrink-0">💬</span>
-            <div className="min-w-0">
-              <div className="text-xs font-extrabold text-emerald-200">
-                {isFr ? '4. Poser une Question Simple' : '4. Ask a Simple Question'}
-              </div>
-              <div className="text-[11px] text-stone-300 truncate">
-                {isFr ? 'L’assistant vous répond sans Internet' : 'Offline assistant answers you'}
-              </div>
-            </div>
+            <Smartphone className="w-4 h-4 shrink-0" />
+            <span>{isFr ? '📲 Installer l’application sur ce téléphone' : '📲 Install App on This Phone'}</span>
           </button>
         </div>
       </div>
 
-      {/* 2. MAIN MODULES GRID (6 Spacious Cards with Short Descriptions) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {/* Module 1: Carte Tactique, Eau Potable & Hôpitaux/Cliniques */}
-        <div
+      {/* 2. LES 4 GRANDS BOUTONS ESSENTIELS (ULTRA-SIMPLES) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* 1. CARTE */}
+        <button
           onClick={() => onNavigate('tactical-map')}
-          className={`group cursor-pointer border rounded-lg p-5 flex flex-col justify-between ${
-            ecoMode
-              ? 'bg-neutral-950 border-neutral-800 hover:border-amber-500'
-              : 'bg-[#221e16] border-slate-800 hover:border-amber-500/70'
-          }`}
+          className="group text-left border-2 border-neutral-800 hover:border-sky-400 bg-neutral-950 hover:bg-neutral-900 rounded-2xl p-5 sm:p-6 flex flex-col justify-between gap-4 cursor-pointer transition-all"
         >
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="w-10 h-10 rounded-md bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400">
-                <MapPin className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-black border border-neutral-800 text-sky-300 font-bold">
-                💧 EAU · 🌊 LACS · 🏥 HÔPITAUX · 🌲 FORÊTS · 📡 TDF
-              </span>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-500/40 flex items-center justify-center text-sky-400 shrink-0">
+              <MapPin className="w-6 h-6" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white group-hover:text-amber-400">
-                {isFr ? 'Carte de France Complète (Eau, Lacs, Hôpitaux, Forêts, TDF)' : 'Complete France Map (Water, Lakes, Hospitals, Forests, TDF)'}
-              </h3>
-              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-extrabold text-white group-hover:text-sky-300">
+                {isFr ? '1. Carte : Eau, Hôpitaux & Forêts' : '1. Map: Water, Hospitals & Forests'}
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-300 mt-1 leading-relaxed">
                 {isFr
-                  ? 'Points d’eau potable, plans d’eau & lacs, hôpitaux & cliniques (dont couverture complète du 66), grandes forêts et émetteurs radio TDF pré-enregistrés hors-ligne.'
-                  : 'Drinking water, lakes, hospitals & clinics (including full Dept 66 coverage), major forests, and TDF transmitters pre-saved offline.'}
+                  ? 'Trouver de l’eau potable, un lac, un hôpital ou une clinique, une forêt ou un émetteur radio autour de vous.'
+                  : 'Find drinking water, lakes, hospitals/clinics, forests, or radio transmitters near you.'}
               </p>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center justify-between text-xs font-mono text-amber-400">
-            <span>{isFr ? 'Ouvrir la Carte' : 'Open Map'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+          <div className="flex items-center justify-between pt-3 border-t border-neutral-800/80 text-xs font-bold text-sky-400">
+            <span>💧 Eau · 🌊 Lacs · 🏥 Hôpitaux · 🌲 Forêts · 📡 Radio</span>
+            <span className="flex items-center gap-1">
+              {isFr ? 'Ouvrir' : 'Open'} <ArrowRight className="w-4 h-4" />
+            </span>
           </div>
-        </div>
+        </button>
 
-        {/* Module 2: Documentation d'Urgence (Fusion Outils 72h + 8 Secours + 16 Manuels) */}
-        <div
+        {/* 2. SECOURS & GUIDES */}
+        <button
           onClick={() => onNavigate('emergency-docs')}
-          className={`group cursor-pointer border rounded-lg p-5 flex flex-col justify-between ${
-            ecoMode
-              ? 'bg-neutral-950 border-neutral-800 hover:border-amber-500'
-              : 'bg-[#221e16] border-slate-800 hover:border-amber-500/70'
-          }`}
+          className="group text-left border-2 border-neutral-800 hover:border-rose-400 bg-neutral-950 hover:bg-neutral-900 rounded-2xl p-5 sm:p-6 flex flex-col justify-between gap-4 cursor-pointer transition-all"
         >
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="w-10 h-10 rounded-md bg-rose-500/10 border border-rose-500/40 flex items-center justify-center text-rose-400">
-                <HeartPulse className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-black border border-neutral-800 text-rose-300 font-bold">
-                8 URGENCES + SAC 72H + 16 MANUELS
-              </span>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-rose-500/15 border border-rose-500/40 flex items-center justify-center text-rose-400 shrink-0">
+              <HeartPulse className="w-6 h-6" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white group-hover:text-amber-400">
-                {isFr ? 'Documentation d’Urgence' : 'Emergency Documentation'}
-              </h3>
-              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-extrabold text-white group-hover:text-rose-300">
+                {isFr ? '2. Secours, Médicaments & Guides' : '2. First Aid, Meds & Guides'}
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-300 mt-1 leading-relaxed">
                 {isFr
-                  ? 'Premiers secours complets (malaise cardiaque, inconscience, hémorragie, étouffement, brûlure, noyade, coup de chaud, morsure), Sac 72h & 16 manuels.'
-                  : 'Complete first aid (cardiac, unconsciousness, bleeding, choking, burns, drowning, heatstroke, bites), 72h bag & 16 manuals.'}
+                  ? 'Les gestes de premiers secours étape par étape, les doses de médicaments, le sac 72h et 16 guides pratiques.'
+                  : 'Step-by-step first aid, medication dosages, 72h emergency bag, and 16 practical guides.'}
               </p>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center justify-between text-xs font-mono text-amber-400">
-            <span>{isFr ? 'Ouvrir la Documentation d’Urgence' : 'Open Emergency Docs'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+          <div className="flex items-center justify-between pt-3 border-t border-neutral-800/80 text-xs font-bold text-rose-400">
+            <span>🚑 8 Secours · 💊 Médicaments · 📖 16 Guides · 🎒 Sac 72h</span>
+            <span className="flex items-center gap-1">
+              {isFr ? 'Ouvrir' : 'Open'} <ArrowRight className="w-4 h-4" />
+            </span>
           </div>
-        </div>
+        </button>
 
-        {/* Module 3: Stock de Survie (Multi-listes, Quantités & Dates de péremption) */}
-        <div
+        {/* 3. MES STOCKS */}
+        <button
           onClick={() => onNavigate('stocks')}
-          className={`group cursor-pointer border rounded-lg p-5 flex flex-col justify-between ${
-            ecoMode
-              ? 'bg-neutral-950 border-neutral-800 hover:border-amber-500'
-              : 'bg-[#221e16] border-slate-800 hover:border-amber-500/70'
-          }`}
+          className="group text-left border-2 border-neutral-800 hover:border-emerald-400 bg-neutral-950 hover:bg-neutral-900 rounded-2xl p-5 sm:p-6 flex flex-col justify-between gap-4 cursor-pointer transition-all"
         >
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="w-10 h-10 rounded-md bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center text-emerald-400">
-                <Package className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-black border border-neutral-800 text-emerald-400 font-bold">
-                MULTI-LISTES & EXPIRATION
-              </span>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0">
+              <Package className="w-6 h-6" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white group-hover:text-amber-400">
-                {isFr ? 'Stock de Survie & Inventaires' : 'Survival Stock & Inventories'}
-              </h3>
-              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-extrabold text-white group-hover:text-emerald-300">
+                {isFr ? '3. Mes Stocks (Eau, Vivres, Pharmacie)' : '3. My Stocks (Water, Food, Meds)'}
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-300 mt-1 leading-relaxed">
                 {isFr
-                  ? 'Créez plusieurs listes de stocks, gérez le nombre de produits, les quantités exactes et le suivi des dates d’expiration.'
-                  : 'Create multiple stock lists, track product counts, quantities, and expiration dates.'}
+                  ? 'Noter vos réserves à la maison ou dans votre sac et voir immédiatement ce qui arrive à péremption.'
+                  : 'Track your home or bag supplies and see expiring items at a glance.'}
               </p>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center justify-between text-xs font-mono text-amber-400">
-            <span>{isFr ? 'Gérer mes Stocks' : 'Manage Stocks'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+          <div className="flex items-center justify-between pt-3 border-t border-neutral-800/80 text-xs font-bold text-emerald-400">
+            <span>📦 Inventaire simple · 📅 Dates de péremption</span>
+            <span className="flex items-center gap-1">
+              {isFr ? 'Ouvrir' : 'Open'} <ArrowRight className="w-4 h-4" />
+            </span>
           </div>
-        </div>
+        </button>
 
-        {/* Module 4: Conseiller IA de Survie */}
-        <div
+        {/* 4. POSER UNE QUESTION */}
+        <button
           onClick={() => onNavigate('survival-llm')}
-          className={`group cursor-pointer border rounded-lg p-5 flex flex-col justify-between ${
-            ecoMode
-              ? 'bg-neutral-950 border-neutral-800 hover:border-amber-500'
-              : 'bg-[#221e16] border-slate-800 hover:border-amber-500/70'
-          }`}
+          className="group text-left border-2 border-neutral-800 hover:border-amber-400 bg-neutral-950 hover:bg-neutral-900 rounded-2xl p-5 sm:p-6 flex flex-col justify-between gap-4 cursor-pointer transition-all"
         >
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="w-10 h-10 rounded-md bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400">
-                <Radio className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-black border border-neutral-800 text-emerald-400">
-                100% HORS-LIGNE
-              </span>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+              <MessageSquare className="w-6 h-6" />
             </div>
-            <div>
-              <h3 className="text-base font-bold text-white group-hover:text-amber-400">
-                {isFr ? 'Assistant IA de Survie' : 'Survival AI Advisor'}
-              </h3>
-              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
+            <div className="min-w-0">
+              <h2 className="text-lg sm:text-xl font-extrabold text-white group-hover:text-amber-300">
+                {isFr ? '4. Poser une Question (Sans Internet)' : '4. Ask a Question (Offline AI)'}
+              </h2>
+              <p className="text-xs sm:text-sm text-stone-300 mt-1 leading-relaxed">
                 {isFr
-                  ? 'Posez vos questions urgentes hors-ligne : premiers secours, eau potable, hypothermie et abri.'
-                  : 'Ask urgent offline survival questions: first aid, safe water, hypothermia, and shelter.'}
+                  ? 'Un doute ? Écrivez votre question avec vos propres mots, l’assistant vous répond tout de suite hors-ligne.'
+                  : 'Have a question? Type in plain words and get immediate offline guidance.'}
               </p>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center justify-between text-xs font-mono text-amber-400">
-            <span>{isFr ? 'Poser une Question' : 'Open AI Advisor'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
+          <div className="flex items-center justify-between pt-3 border-t border-neutral-800/80 text-xs font-bold text-amber-400">
+            <span>💬 Réponse immédiate · 100% autonome</span>
+            <span className="flex items-center gap-1">
+              {isFr ? 'Ouvrir' : 'Open'} <ArrowRight className="w-4 h-4" />
+            </span>
           </div>
-        </div>
-
-        {/* Module 5: Survie Sans Courant (Blackout) */}
-        <div
-          onClick={() => onNavigate('blackout')}
-          className={`group cursor-pointer border rounded-lg p-5 flex flex-col justify-between ${
-            ecoMode
-              ? 'bg-neutral-950 border-neutral-800 hover:border-amber-500'
-              : 'bg-[#221e16] border-slate-800 hover:border-amber-500/70'
-          }`}
-        >
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="w-10 h-10 rounded-md bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400">
-                <ZapOff className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-black border border-neutral-800 text-amber-400">
-                ÉNERGIE & 12V
-              </span>
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-white group-hover:text-amber-400">
-                {isFr ? 'Autonomie Sans Courant' : 'Blackout Power Guide'}
-              </h3>
-              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
-                {isFr
-                  ? 'Économiser vos batteries, brancher une batterie 12V de voiture et imprimer le mémo papier.'
-                  : 'Save battery life, wire a 12V car battery safely, and print your emergency sheet.'}
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center justify-between text-xs font-mono text-amber-400">
-            <span>{isFr ? 'Gérer l’Énergie' : 'Manage Power'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
-
-        {/* Module 6: Paramètres, Moniteur Système & Mémoire Familiale */}
-        <div
-          onClick={() => onNavigate('settings')}
-          className={`group cursor-pointer border rounded-lg p-5 flex flex-col justify-between ${
-            ecoMode
-              ? 'bg-neutral-950 border-neutral-800 hover:border-amber-500'
-              : 'bg-[#221e16] border-slate-800 hover:border-amber-500/70'
-          }`}
-        >
-          <div className="space-y-2.5">
-            <div className="flex items-center justify-between gap-2">
-              <div className="w-10 h-10 rounded-md bg-amber-500/10 border border-amber-500/40 flex items-center justify-center text-amber-400">
-                <Settings className="w-5 h-5" />
-              </div>
-              <span className="text-[10px] font-mono px-2.5 py-0.5 rounded bg-black border border-neutral-800 text-stone-300">
-                CPU · RAM · BATTERIE · RÉSEAU
-              </span>
-            </div>
-            <div>
-              <h3 className="text-base font-bold text-white group-hover:text-amber-400">
-                {isFr ? 'Paramètres & État Système' : 'Settings & System Monitor'}
-              </h3>
-              <p className="text-xs text-stone-400 mt-1 leading-relaxed">
-                {isFr
-                  ? 'Moniteur temps réel (Processeur, RAM, Alimentation, Réseau), fiche médicale familiale et sauvegarde clé USB.'
-                  : 'Real-time monitor (CPU, RAM, Power, Network), family medical sheet, and USB backup.'}
-              </p>
-            </div>
-          </div>
-          <div className="mt-4 pt-3 border-t border-neutral-800 flex items-center justify-between text-xs font-mono text-amber-400">
-            <span>{isFr ? 'Ouvrir les Paramètres' : 'Open Settings'}</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </div>
-        </div>
+        </button>
       </div>
 
-      {/* 3. SLEEK EMERGENCY QUICK-ACTION (8 VITAL EMERGENCIES + DIRECT SURVIVAL PACK DOWNLOADS) */}
-      <div
-        className={`border rounded-md p-4 flex flex-col xl:flex-row xl:items-center justify-between gap-3 ${
-          ecoMode
-            ? 'bg-neutral-950 border-neutral-800'
-            : 'bg-slate-900/60 border-slate-800'
-        }`}
-      >
-        <div className="flex flex-wrap items-center gap-2 text-xs font-mono">
-          <span className="text-rose-400 uppercase text-[11px] font-bold flex items-center gap-1 mr-1">
-            <ShieldAlert className="w-3.5 h-3.5" />
-            <span>{isFr ? 'Premiers Secours (8 Urgences) :' : 'First Aid (8 Emergencies):'}</span>
+      {/* 3. ACCÈS DIRECT AUX 8 URGENCES VITALES EN 1 CLIC */}
+      <div className="border border-rose-800/60 bg-neutral-950 rounded-2xl p-4 sm:p-5 space-y-3">
+        <div className="flex items-center gap-2 text-rose-400 font-extrabold text-xs sm:text-sm uppercase">
+          <ShieldAlert className="w-4 h-4 shrink-0" />
+          <span>
+            {isFr
+              ? 'Urgence Médicale : Cliquez directement sur la situation'
+              : 'Medical Emergency: Tap the situation directly'}
           </span>
-          {[
-            '🫀 Malaise cardiaque',
-            '🛌 Inconscience (PLS)',
-            '🩸 Hémorragie',
-            '🫁 Étouffement',
-            '🔥 Brûlure',
-            '🌊 Noyade',
-            '☀️ Coup de chaud',
-            '🐍 Piqûre / Morsure'
-          ].map((label, idx) => (
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {quickEmergencies.map(item => (
             <button
-              key={idx}
-              onClick={() => onNavigate('emergency-docs')}
-              className="px-2.5 py-1.5 rounded-sm bg-rose-950/50 hover:bg-rose-900/70 border border-rose-800/70 text-rose-100 text-[11px] cursor-pointer"
+              key={item.id}
+              onClick={() => handleOpenUrgencyDirect(item.id)}
+              className="p-3 rounded-xl bg-rose-950/40 hover:bg-rose-900/70 border border-rose-800/70 text-left flex items-center gap-2.5 cursor-pointer transition-colors"
             >
-              {label}
+              <span className="text-xl shrink-0">{item.icon}</span>
+              <span className="text-xs font-bold text-rose-100 leading-tight">
+                {isFr ? item.labelFr : item.labelEn}
+              </span>
             </button>
           ))}
         </div>
-
-        <div className="flex flex-wrap items-center gap-2 text-xs font-mono shrink-0">
-          <span className="text-stone-400 uppercase text-[11px]">
-            {isFr ? 'Packs 1-Clic :' : 'Quick Packs:'}
-          </span>
-          <button
-            onClick={() => handleDownloadPackById('pack-tccc-first-aid')}
-            className="px-2.5 py-1.5 rounded-sm bg-amber-500/15 hover:bg-amber-500/25 border border-amber-600/50 text-amber-300 flex items-center gap-1 cursor-pointer"
-          >
-            <Download className="w-3 h-3" />
-            <span>{isFr ? 'Secours (8 Urgences)' : 'First Aid'}</span>
-          </button>
-          <button
-            onClick={() => handleDownloadPackById('pack-water-purification')}
-            className="px-2.5 py-1.5 rounded-sm bg-amber-500/15 hover:bg-amber-500/25 border border-amber-600/50 text-amber-300 flex items-center gap-1 cursor-pointer"
-          >
-            <Download className="w-3 h-3" />
-            <span>{isFr ? 'Eau Potable' : 'Safe Water'}</span>
-          </button>
-        </div>
       </div>
 
-      {/* Floating Download Toast */}
-      {downloadToast && (
-        <div className="fixed bottom-5 right-5 z-[9999] bg-neutral-950 border border-emerald-500 text-emerald-300 px-3.5 py-2 rounded-md shadow-xl font-mono text-xs flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-          <span>{downloadToast}</span>
-        </div>
-      )}
+      {/* 4. ACCÈS SECONDAIRES (COUPURE DE COURANT & RÉGLAGES / PARTAGE TÉLÉPHONE) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <button
+          onClick={() => onNavigate('blackout')}
+          className="p-4 rounded-xl border border-neutral-800 hover:border-amber-500/60 bg-neutral-950 flex items-center justify-between gap-3 cursor-pointer text-left"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <ZapOff className="w-5 h-5 text-amber-400 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-xs sm:text-sm font-bold text-white">
+                {isFr ? '⚡ Coupure d’électricité (Blackout)' : '⚡ Power Outage (Blackout)'}
+              </div>
+              <div className="text-xs text-stone-400 truncate">
+                {isFr ? 'Checklist des 15 premières minutes & économie de batterie' : 'First 15 min checklist & battery saving'}
+              </div>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-amber-400 shrink-0" />
+        </button>
+
+        <button
+          onClick={() => onNavigate('settings')}
+          className="p-4 rounded-xl border border-neutral-800 hover:border-amber-500/60 bg-neutral-950 flex items-center justify-between gap-3 cursor-pointer text-left"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <Settings className="w-5 h-5 text-amber-400 shrink-0" />
+            <div className="min-w-0">
+              <div className="text-xs sm:text-sm font-bold text-white">
+                {isFr ? '⚙️ Réglages, Fiche Famille & QR Code Téléphone' : '⚙️ Settings, Family Sheet & Phone QR Code'}
+              </div>
+              <div className="text-xs text-stone-400 truncate">
+                {isFr ? 'Infos médicales du foyer, sauvegarde USB et envoi sur téléphone' : 'Family medical info, USB backup & phone transfer'}
+              </div>
+            </div>
+          </div>
+          <ArrowRight className="w-4 h-4 text-amber-400 shrink-0" />
+        </button>
+      </div>
     </div>
   );
 };
